@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoGrid Analytics - Dashboard Operativo</title>
+    <!-- Chart.js para las gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            margin: 0;
+            padding: 1.5rem;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .control-panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dropdown-toggle-btn {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dropdown-content {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .checkbox-item input {
+            margin-right: 0.5rem;
+            accent-color: var(--accent);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .secondary-btn {
+            background-color: #334155;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .secondary-btn:hover {
+            background-color: #475569;
+        }
+
+        .chart-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .alerts-box {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .alert-badge {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-optimal {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .alert-critical {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <header>
+            <h1>EcoGrid Analytics - Panel Operativo (SmartGrid-Predictor)</h1>
+            <div class="nav-links">
+                <a href="admin.html">Gestión Admin</a>
+                <a href="index.html">Cerrar Sesión</a>
+            </div>
+        </header>
+
+        <!-- PANEL DE FILTROS Y CONTROL DE CURVAS -->
+        <div class="control-panel">
+            <button class="dropdown-toggle-btn" onclick="toggleFilters()">
+                <span>⚙️ Configurar Filtros y Variables de Predicción (NF1)</span>
+                <span id="arrowIcon">▼</span>
+            </button>
+            
+            <div id="filterDropdown" class="dropdown-content">
+                <div class="checkbox-grid">
+                    <label class="checkbox-item"><input type="checkbox" id="chkCCAA"> Filtro Territorial (CCAA)</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chkLluvia"> Variables Meteorológicas (Lluvia/Temp)</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chkFestivos"> Calendario y Festivos BOE</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chkOmie"> Precios de Mercado OMIE</label>
+                </div>
+                <div class="button-group">
+                    <button class="action-btn" onclick="runComparativePrediction()">Mostrar Curva Comparativa</button>
+                    <button class="secondary-btn" id="toggleTomorrowBtn" onclick="toggleTomorrowCurve()">👁️ Ocultar Curva de Mañana</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETA DE GRÁFICA -->
+        <div class="chart-card">
+            <h3>Curva de Demanda Horaria (Actual vs. Previsión 24h)</h3>
+            <div style="height: 380px;">
+                <canvas id="demandChart"></canvas>
+            </div>
+
+            <!-- PUNTOS CRÍTICOS Y ÓPTIMOS EN LEYENDA INFERIOR -->
+            <div class="alerts-box">
+                <div class="alert-badge alert-optimal">
+                    <span>⭐ <strong>Punto Óptimo de Compra (Destacado en gráfica):</strong> 04:00 AM (Precio mín: 0.078 €/kWh)</span>
+                </div>
+                <div class="alert-badge alert-critical">
+                    <span>⚠️ <strong>Punto Más Crítico / Pico (Destacado en gráfica):</strong> 20:00 PM (Precio máx: 0.285 €/kWh)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleFilters() {
+            const dropdown = document.getElementById('filterDropdown');
+            const arrow = document.getElementById('arrowIcon');
+            dropdown.classList.toggle('show');
+            arrow.textContent = dropdown.classList.contains('show') ? '▲' : '▼';
+        }
+
+        const ctx = document.getElementById('demandChart').getContext('2d');
+        const hours = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+
+        // Datos curva actual (Hoy)
+        const currentData = [18, 17, 16, 15, 15, 16, 19, 22, 25, 27, 28, 27, 26, 25, 26, 28, 30, 33, 35, 34, 31, 27, 23, 20];
+        
+        // Datos curva predicción (Mañana)
+        const tomorrowData = [17.5, 16.8, 15.5, 14.8, 14.9, 16.2, 18.5, 21.8, 24.5, 26.8, 27.5, 26.8, 25.5, 24.8, 25.8, 27.8, 29.5, 32.5, 34.8, 33.5, 30.5, 26.8, 22.5, 19.5];
+
+        // Resaltamos visualmente los puntos en la propia gráfica:
+        // Índice 4 -> 04:00 AM (Óptimo / Verde) | Índice 20 -> 20:00 PM (Pico Crítico / Rojo)
+        const pointRadii = tomorrowData.map((_, i) => (i === 4 || i === 20) ? 8 : 3);
+        const pointColors = tomorrowData.map((_, i) => i === 4 ? '#10b981' : (i === 20 ? '#ef4444' : '#10b981'));
+
+        const demandChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: hours,
+                datasets: [
+                    {
+                        label: 'Curva de Demanda Actual (Últimas 24h)',
+                        data: currentData,
+                        borderColor: '#3b82f6', // Azul
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Curva Predicha 24h (Simulada / Con Filtros)',
+                        data: tomorrowData,
+                        borderColor: '#10b981', // Verde
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        tension: 0.3,
+                        fill: false,
+                        hidden: false, // Por defecto visible, se puede conmutar
+                        pointRadius: pointRadii,
+                        pointBackgroundColor: pointColors,
+                        pointHoverRadius: 10
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#f8fafc' }
+                    }
+                },
+                scales: {
+                    x: { 
+                        ticks: { color: '#94a3b8' }, 
+                        grid: { color: '#334155' } 
+                    },
+                    y: { 
+                        min: 10,  // Fijamos el mínimo para que la gráfica no rescale
+                        max: 40,  // Fijamos el máximo para que la gráfica no rescale
+                        ticks: { color: '#94a3b8' }, 
+                        grid: { color: '#334155' } 
+                    }
+                }
+            }
+        });
+
+        // Función para mostrar/ocultar la curva de mañana sin afectar a la de hoy
+        function toggleTomorrowCurve() {
+            const dataset = demandChart.data.datasets[1];
+            const btn = document.getElementById('toggleTomorrowBtn');
+
+            // Invertimos el estado de ocultación
+            dataset.hidden = !dataset.hidden;
+            demandChart.update();
+
+            // Actualizamos el texto e icono del botón según el estado real
+            if (dataset.hidden) {
+                btn.textContent = '👁️ Mostrar Curva de Mañana';
+            } else {
+                btn.textContent = '👁️ Ocultar Curva de Mañana';
+            }
+        }
+
+        function runComparativePrediction() {
+            const dataset = demandChart.data.datasets[1];
+            
+            // Si estaba oculta, la volvemos a mostrar al aplicar los filtros
+            if (dataset.hidden) {
+                dataset.hidden = false;
+                document.getElementById('toggleTomorrowBtn').textContent = '👁️ Ocultar Curva de Mañana';
+            }
+
+            const ccaa = document.getElementById('chkCCAA').checked;
+            const lluvia = document.getElementById('chkLluvia').checked;
+            const festivos = document.getElementById('chkFestivos').checked;
+            const omie = document.getElementById('chkOmie').checked;
+
+            alert(`Aplicando filtros seleccionados contra la Base de Datos:\n- CCAA: ${ccaa}\n- Meteorología: ${lluvia}\n- Festivos BOE: ${festivos}\n- Precios OMIE: ${omie}`);
+
+            // Solo modificamos los datos de la predicción de mañana (dataset[1]), la de hoy (dataset[0]) queda intocable
+            dataset.data = tomorrowData.map(val => +(val * (1 + (Math.random() * 0.08 - 0.04))).toFixed(1));
+            demandChart.update();
+        }
+    </script>
+</body>
+</html>
