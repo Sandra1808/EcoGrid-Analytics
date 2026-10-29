@@ -1,0 +1,43 @@
+version: '1.0'
+scheduler:
+  timezone: Europe/Madrid
+  coalesce: true
+  max_instances: 1
+tasks:
+  open_meteo_madrid:
+    name: Open-Meteo Madrid Weather & Wind
+    connector: open_meteo
+    enabled: false
+    interval_minutes: 5
+    cron: '*/5 * * * *'
+    destination_dir: data/raw
+    description: Ingesta meteorológica y eólica multinivel para Madrid (10m, 80m,
+      120m, 180m, radiación, nubosidad)
+    params:
+      latitude: 40.41
+      longitude: -3.73
+      timezone: Europe/Madrid
+  omie_marginal_prices:
+    name: OMIE Mercado Diario Precios Marginales
+    connector: omie
+    enabled: false
+    interval_minutes: 2
+    cron: '*/2 * * * *'
+    destination_dir: data/raw
+    description: Descarga de ficheros de mercado marginal horario (España y Portugal)
+      y curvas de casación
+    params:
+      market: MIBEL
+      file_parent: marginalpdbc
+  ree_demanda_tiempo_real:
+    name: REE / ESIOS Demanda Eléctrica Peninsular
+    connector: ree_esios
+    enabled: false
+    interval_minutes: 30
+    cron: '*/30 * * * *'
+    destination_dir: data/raw
+    description: Monitorización de demanda real peninsular e indicativa con soporte
+      de token ESIOS y fallback público
+    params:
+      indicator_real: 1293
+      indicator_forecast: 460

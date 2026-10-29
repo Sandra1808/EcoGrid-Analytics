@@ -1,0 +1,20 @@
+{
+  "open_meteo_madrid": {
+    "timestamp": "2026-10-28 18:02:09",
+    "timestamp_iso": "2026-10-28T18:02:09.484192+01:00",
+    "status": "SUCCESS",
+    "http_code": 200,
+    "saved_file": "open_meteo_20261028_180209.json",
+    "summary": "Descarga exitosa de 168 registros horarios para Madrid (40.41, -3.73)",
+    "error": null
+  },
+  "omie_marginal_prices": {
+    "timestamp": "2026-10-28 18:09:54",
+    "timestamp_iso": "2026-10-28T18:09:54.355085+01:00",
+    "status": "SUCCESS",
+    "http_code": 200,
+    "saved_file": "omie_20261028_180954.json",
+    "summary": "Descarga exitosa de OMIE marginal para la fecha 20261028 (96 horas)",
+    "error": null
+  }
+}
