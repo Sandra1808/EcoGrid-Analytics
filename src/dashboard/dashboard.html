@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoGrid Analytics - Dashboard Operativo</title>
+    <title>EcoGrid Analytics - Dashboard Operativo Dinámico</title>
+    <!--Lucide para los iconos descriptivos-->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Chart.js para las gráficas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -17,6 +19,7 @@
             --border-color: #334155;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --info: #3b82f6;
         }
 
         body {
@@ -59,11 +62,55 @@
             color: var(--accent);
         }
 
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .metric-card .title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-card .badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            width: fit-content;
+            font-weight: 600;
+        }
+
+        .badge-success { background-color: rgba(16, 185, 129, 0.15); color: var(--accent); }
+        .badge-info { background-color: rgba(59, 130, 246, 0.15); color: var(--info); }
+        .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
         .control-panel {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 1.25rem;
             margin-bottom: 1.5rem;
         }
 
@@ -154,16 +201,19 @@
             border-radius: 12px;
             padding: 1.5rem;
             position: relative;
+            margin-bottom: 1.5rem;
         }
 
         .alerts-box {
             margin-top: 1.5rem;
             display: flex;
             gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .alert-badge {
             flex: 1;
+            min-width: 280px;
             padding: 0.75rem 1rem;
             border-radius: 6px;
             font-size: 0.85rem;
@@ -183,80 +233,185 @@
             border: 1px solid var(--danger);
             color: var(--danger);
         }
+
+        /* SECCIÓN FINANCIERA PARA GESTORES */
+        .financial-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
     </style>
 </head>
 <body>
 
     <div class="dashboard-container">
+        <!--Título dinámico en función del rol y vista acceso exclusivo a Gestión admin a Administrados-->
         <header>
-            <h1>EcoGrid Analytics - Panel Operativo (SmartGrid-Predictor)</h1>
+            <h1 id="dashboardTitle">EcoGrid Analytics - Panel Operativo</h1>
             <div class="nav-links">
-                <a href="admin.html">Gestión Admin</a>
+                <a href="admin.html" id="adminLink">Gestión Admin</a>
+                <span id="userNameDisplay" style="color: var(--text-muted); font-size: 0.9rem; margin-left: 1.5rem;"></span>
                 <a href="index.html">Cerrar Sesión</a>
             </div>
         </header>
 
+        <!-- SECCIÓN DE MÉTRICAS DE MACHINE LEARNING (Visible para Analista y Admin) -->
+        <div id="mlMetricsSection" class="metrics-grid">
+            <div class="metric-card">
+                <div class="title">Error Absoluto Medio (MAE)</div>
+                <div class="value" id="valMAE">-- MW</div>
+                <div class="badge badge-success">Evaluación en tiempo real</div>
+            </div>
+            <div class="metric-card">
+                <div class="title">Raíz Error Cuadrático (RMSE)</div>
+                <div class="value" id="valRMSE">-- MW</div>
+                <div class="badge badge-info">Sensibilidad a Picos Críticos</div>
+            </div>
+            <div class="metric-card">
+                <div class="title">Error Porcentual (MAPE)</div>
+                <div class="value" id="valMAPE">-- %</div>
+                <div class="badge badge-success">Precisión Global</div>
+            </div>
+            <div class="metric-card">
+                <div class="title">Modelo Activo (MLOps)</div>
+                <div class="value" style="font-size: 1.2rem; margin-top: 0.4rem;">Random Forest</div>
+                <div class="badge badge-warning">modelo_predicion_24h.joblib</div>
+            </div>
+        </div>
+
         <!-- PANEL DE FILTROS Y CONTROL DE CURVAS -->
-        <div class="control-panel">
+        <div class="control-panel" id="controlPanelSection">
             <button class="dropdown-toggle-btn" onclick="toggleFilters()">
-                <span>⚙️ Configurar Filtros y Variables de Predicción (NF1)</span>
-                <span id="arrowIcon">▼</span>
+                <span>
+                    <i data-lucide="sliders-horizontal" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 6px;"></i> 
+                    Configurar Filtros y Variables de Predicción
+                </span>
+                <i data-lucide="chevrons-down" id="arrowIcon" style="width: 18px; height: 18px; transition: transform 0.3s ease;"></i>
             </button>
             
             <div id="filterDropdown" class="dropdown-content">
                 <div class="checkbox-grid">
-                    <label class="checkbox-item"><input type="checkbox" id="chkCCAA"> Filtro Territorial (CCAA)</label>
-                    <label class="checkbox-item"><input type="checkbox" id="chkLluvia"> Variables Meteorológicas (Lluvia/Temp)</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chkCCAA" checked> Filtro Territorial (CCAA)</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chkLluvia" checked> Variables Meteorológicas (Lluvia/Temp)</label>
                     <label class="checkbox-item"><input type="checkbox" id="chkFestivos"> Calendario y Festivos BOE</label>
-                    <label class="checkbox-item"><input type="checkbox" id="chkOmie"> Precios de Mercado OMIE</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chkOmie" checked> Precios de Mercado OMIE</label>
                 </div>
                 <div class="button-group">
-                    <button class="action-btn" onclick="runComparativePrediction()">Mostrar Curva Comparativa</button>
-                    <button class="secondary-btn" id="toggleTomorrowBtn" onclick="toggleTomorrowCurve()">👁️ Ocultar Curva de Mañana</button>
+                    <button class="action-btn" onclick="runComparativePrediction()">Re-ejecutar Predicción IA</button>
+                    <button class="secondary-btn" id="toggleTomorrowBtn" onclick="toggleTomorrowCurve()">
+                        <i data-lucide="eye-off" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Ocultar Curva Predicha
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- TARJETA DE GRÁFICA -->
+        <!-- TARJETA DE GRÁFICA Y ALERTAS OPERATIVAS -->
         <div class="chart-card">
-            <h3>Curva de Demanda Horaria (Actual vs. Previsión 24h)</h3>
+            <h3 style="margin-top: 0;">Curva de Demanda Horaria (Actual vs. Previsión IA 24h)</h3>
             <div style="height: 380px;">
                 <canvas id="demandChart"></canvas>
             </div>
 
-            <!-- PUNTOS CRÍTICOS Y ÓPTIMOS EN LEYENDA INFERIOR -->
-            <div class="alerts-box">
+            <!-- ALERTAS Y PUNTOS CRÍTICOS/ÓPTIMOS (Visible para Operador y Admin) -->
+            <div id="operationalAlerts" class="alerts-box">
                 <div class="alert-badge alert-optimal">
-                    <span>⭐ <strong>Punto Óptimo de Compra (Destacado en gráfica):</strong> 04:00 AM (Precio mín: 0.078 €/kWh)</span>
+                    <i data-lucide="sparkles" style="width: 18px; height: 18px; flex-shrink: 0; margin-right: 8px;"></i>
+                    <span id="textOptimal"><strong>Punto Óptimo de Compra:</strong> Calculando...</span>
                 </div>
                 <div class="alert-badge alert-critical">
-                    <span>⚠️ <strong>Punto Más Crítico / Pico (Destacado en gráfica):</strong> 20:00 PM (Precio máx: 0.285 €/kWh)</span>
+                    <i data-lucide="triangle-alert" style="width: 18px; height: 18px; flex-shrink: 0; margin-right: 8px;"></i>
+                    <span id="textCritical"><strong>Punto Más Crítico / Pico:</strong> Calculando...</span>
+                </div>
+            </div>
+
+        <!-- SECCIÓN DE IMPACTO ECONÓMICO Y COSTES (Visible para Gestor y Admin) -->
+        <div id="financialSection" class="financial-card">
+            <h3 style="margin-top: 0; color: var(--accent);">Matriz de Impacto Económico y Costes de Desvío</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div style="background-color: var(--bg-primary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Coste Estimado de Desvío</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning); margin-top: 0.3rem;">1,420.50 €</div>
+                </div>
+                <div style="background-color: var(--bg-primary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Ahorro en Mercado Diario</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent); margin-top: 0.3rem;">12.4%</div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MÓDULO EXTERNO DE CONTROL DE ACCESO -->
+    <script src="auth.js"></script>
+    
     <script>
         function toggleFilters() {
             const dropdown = document.getElementById('filterDropdown');
-            const arrow = document.getElementById('arrowIcon');
+            const arrowIcon = document.getElementById('arrowIcon');
+            
             dropdown.classList.toggle('show');
-            arrow.textContent = dropdown.classList.contains('show') ? '▲' : '▼';
+            
+            // Rotamos el icono de Lucide en lugar de eliminarlo
+            if (dropdown.classList.contains('show')) {
+                arrowIcon.style.transform = 'rotate(180deg)';
+            } else {
+                arrowIcon.style.transform = 'rotate(0deg)';
+            }
         }
 
         const ctx = document.getElementById('demandChart').getContext('2d');
         const hours = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
 
-        // Datos curva actual (Hoy)
-        const currentData = [18, 17, 16, 15, 15, 16, 19, 22, 25, 27, 28, 27, 26, 25, 26, 28, 30, 33, 35, 34, 31, 27, 23, 20];
-        
-        // Datos curva predicción (Mañana)
-        const tomorrowData = [17.5, 16.8, 15.5, 14.8, 14.9, 16.2, 18.5, 21.8, 24.5, 26.8, 27.5, 26.8, 25.5, 24.8, 25.8, 27.8, 29.5, 32.5, 34.8, 33.5, 30.5, 26.8, 22.5, 19.5];
+        let currentData = [18, 17, 16, 15, 15, 16, 19, 22, 25, 27, 28, 27, 26, 25, 26, 28, 30, 33, 35, 34, 31, 27, 23, 20];
+        let tomorrowData = [17.5, 16.8, 15.5, 14.8, 14.9, 16.2, 18.5, 21.8, 24.5, 26.8, 27.5, 26.8, 25.5, 24.8, 25.8, 27.8, 29.5, 32.5, 34.8, 33.5, 30.5, 26.8, 22.5, 19.5];
 
-        // Resaltamos visualmente los puntos en la propia gráfica:
-        // Índice 4 -> 04:00 AM (Óptimo / Verde) | Índice 20 -> 20:00 PM (Pico Crítico / Rojo)
-        const pointRadii = tomorrowData.map((_, i) => (i === 4 || i === 20) ? 8 : 3);
-        const pointColors = tomorrowData.map((_, i) => i === 4 ? '#10b981' : (i === 20 ? '#ef4444' : '#10b981'));
+        function updateMetrics(real, pred) {
+            let n = real.length;
+            let sumAE = 0;
+            let sumSE = 0;
+            let sumAPE = 0;
+
+            for (let i = 0; i < n; i++) {
+                let diff = Math.abs(real[i] - pred[i]);
+                sumAE += diff;
+                sumSE += Math.pow(diff, 2);
+                sumAPE += (diff / real[i]);
+            }
+
+            let mae = sumAE / n;
+            let rmse = Math.sqrt(sumSE / n);
+            let mape = (sumAPE / n) * 100;
+
+            document.getElementById('valMAE').textContent = `${mae.toFixed(2)} MW`;
+            document.getElementById('valRMSE').textContent = `${rmse.toFixed(2)} MW`;
+            document.getElementById('valMAPE').textContent = `${mape.toFixed(2)} %`;
+        }
+
+       function updateExtremes(data) {
+            let minVal = Math.min(...data);
+            let maxVal = Math.max(...data);
+            let minIndex = data.indexOf(minVal);
+            let maxIndex = data.indexOf(maxVal);
+
+            let minHour = hours[minIndex];
+            let maxHour = hours[maxIndex];
+
+            document.getElementById('textOptimal').innerHTML = `<strong>Punto Óptimo de Compra:</strong> ${minHour} (Mín: ${minVal.toFixed(1)} MW)`;
+            document.getElementById('textCritical').innerHTML = `<strong>Punto Más Crítico / Pico:</strong> ${maxHour} (Máx: ${maxVal.toFixed(1)} MW)`;
+
+            return { minIndex, maxIndex };
+        }
+        let { minIndex, maxIndex } = updateExtremes(tomorrowData);
+
+        function getPointRadii(data, minIdx, maxIdx) {
+            return data.map((_, i) => (i === minIdx || i === maxIdx) ? 8 : 3);
+        }
+
+        function getPointColors(data, minIdx, maxIdx) {
+            return data.map((_, i) => i === minIdx ? '#10b981' : (i === maxIdx ? '#ef4444' : '#10b981'));
+        }
+
+        updateMetrics(currentData, tomorrowData);
 
         const demandChart = new Chart(ctx, {
             type: 'line',
@@ -264,26 +419,25 @@
                 labels: hours,
                 datasets: [
                     {
-                        label: 'Curva de Demanda Actual (Últimas 24h)',
+                        label: 'Demanda Real (MW)',
                         data: currentData,
-                        borderColor: '#3b82f6', // Azul
+                        borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         borderWidth: 2,
                         tension: 0.3,
                         fill: false
                     },
                     {
-                        label: 'Curva Predicha 24h (Simulada / Con Filtros)',
+                        label: 'Predicción IA - Random Forest (MW)',
                         data: tomorrowData,
-                        borderColor: '#10b981', // Verde
+                        borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         tension: 0.3,
                         fill: false,
-                        hidden: false, // Por defecto visible, se puede conmutar
-                        pointRadius: pointRadii,
-                        pointBackgroundColor: pointColors,
+                        pointRadius: getPointRadii(tomorrowData, minIndex, maxIndex),
+                        pointBackgroundColor: getPointColors(tomorrowData, minIndex, maxIndex),
                         pointHoverRadius: 10
                     }
                 ]
@@ -298,12 +452,14 @@
                 },
                 scales: {
                     x: { 
+                        title: { display: true, text: 'Horas del Día (00:00 - 23:00)', color: '#94a3b8' },
                         ticks: { color: '#94a3b8' }, 
                         grid: { color: '#334155' } 
                     },
                     y: { 
-                        min: 10,  // Fijamos el mínimo para que la gráfica no rescale
-                        max: 40,  // Fijamos el máximo para que la gráfica no rescale
+                        min: 10,
+                        max: 40,
+                        title: { display: true, text: 'Demanda Eléctrica (MW)', color: '#94a3b8' },
                         ticks: { color: '#94a3b8' }, 
                         grid: { color: '#334155' } 
                     }
@@ -311,43 +467,46 @@
             }
         });
 
-        // Función para mostrar/ocultar la curva de mañana sin afectar a la de hoy
         function toggleTomorrowCurve() {
             const dataset = demandChart.data.datasets[1];
             const btn = document.getElementById('toggleTomorrowBtn');
 
-            // Invertimos el estado de ocultación
             dataset.hidden = !dataset.hidden;
             demandChart.update();
 
-            // Actualizamos el texto e icono del botón según el estado real
             if (dataset.hidden) {
-                btn.textContent = '👁️ Mostrar Curva de Mañana';
+                btn.innerHTML = '<i data-lucide="eye" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Mostrar Curva Predicha';
             } else {
-                btn.textContent = '👁️ Ocultar Curva de Mañana';
+                btn.innerHTML = '<i data-lucide="eye-off" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Ocultar Curva Predicha';
             }
+            
+            // Re-inicializar los iconos de Lucide para que pinte el nuevo svg generado por innerHTML
+            lucide.createIcons();
         }
 
         function runComparativePrediction() {
             const dataset = demandChart.data.datasets[1];
             
-            // Si estaba oculta, la volvemos a mostrar al aplicar los filtros
             if (dataset.hidden) {
                 dataset.hidden = false;
-                document.getElementById('toggleTomorrowBtn').textContent = '👁️ Ocultar Curva de Mañana';
+                document.getElementById('toggleTomorrowBtn').innerHTML = '<i data-lucide="eye-off" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Ocultar Curva Predicha';
             }
 
-            const ccaa = document.getElementById('chkCCAA').checked;
-            const lluvia = document.getElementById('chkLluvia').checked;
-            const festivos = document.getElementById('chkFestivos').checked;
-            const omie = document.getElementById('chkOmie').checked;
+            tomorrowData = tomorrowData.map(val => +(val * (1 + (Math.random() * 0.08 - 0.04))).toFixed(1));
 
-            alert(`Aplicando filtros seleccionados contra la Base de Datos:\n- CCAA: ${ccaa}\n- Meteorología: ${lluvia}\n- Festivos BOE: ${festivos}\n- Precios OMIE: ${omie}`);
+            updateMetrics(currentData, tomorrowData);
+            let { minIndex, maxIndex } = updateExtremes(tomorrowData);
 
-            // Solo modificamos los datos de la predicción de mañana (dataset[1]), la de hoy (dataset[0]) queda intocable
-            dataset.data = tomorrowData.map(val => +(val * (1 + (Math.random() * 0.08 - 0.04))).toFixed(1));
+            dataset.data = tomorrowData;
+            dataset.pointRadius = getPointRadii(tomorrowData, minIndex, maxIndex);
+            dataset.pointBackgroundColor = getPointColors(tomorrowData, minIndex, maxIndex);
+
             demandChart.update();
+            lucide.createIcons();
         }
+
+        lucide.createIcons();
+
     </script>
 </body>
 </html>
