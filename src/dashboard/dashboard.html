@@ -433,7 +433,6 @@
                             display: true,
                             text: 'Demanda Eléctrica (MW)',
                             color: '#94a3b8',
-                            /*font: { weight: 'bold' }*/
                         },
                         ticks: { color: '#94a3b8' }, 
                         grid: { color: '#334155' } 
@@ -452,7 +451,7 @@
             btn.textContent = dataset.hidden ? '👁️ Mostrar Curva Predicha' : '👁️ Ocultar Curva Predicha';
         }
 
-        // 4. RE-EJECUCIÓN TOTALMENTE SINCRONIZADA Y DINÁMICA
+        // 4. EJECUCIÓN SINCRONIZADA Y DINÁMICA
         function runComparativePrediction() {
             const dataset = demandChart.data.datasets[1];
             
@@ -461,7 +460,7 @@
                 document.getElementById('toggleTomorrowBtn').textContent = '👁️ Ocultar Curva Predicha';
             }
 
-            // Simular nueva predicción variando ligeramente la curva
+            // Simular nueva predicción variando ligeramente la curva hasta tener la API
             tomorrowData = tomorrowData.map(val => +(val * (1 + (Math.random() * 0.08 - 0.04))).toFixed(1));
 
             // Recalcular métricas en tiempo real con los nuevos datos
