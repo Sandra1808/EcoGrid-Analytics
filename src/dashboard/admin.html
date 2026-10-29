@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoGrid Analytics - Panel de Administración</title>
+    <!-- Lucide para iconos vectoriales limpios -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
             --bg-primary: #0f172a;
@@ -14,6 +16,9 @@
             --text-muted: #94a3b8;
             --border-color: #334155;
             --info-bg: #0f172a;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --warning: #f59e0b;
         }
 
         body {
@@ -25,7 +30,7 @@
         }
 
         .admin-container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -42,6 +47,9 @@
             margin: 0;
             font-size: 1.5rem;
             color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .nav-links a {
@@ -50,6 +58,9 @@
             margin-left: 1.5rem;
             font-size: 0.9rem;
             transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
         .nav-links a:hover {
@@ -62,12 +73,36 @@
             border-radius: 12px;
             padding: 2rem;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            margin-bottom: 2rem;
+        }
+
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
         }
 
         .card h2 {
-            margin-top: 0;
+            margin: 0;
             font-size: 1.25rem;
-            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Contenedor desplegable para el alta */
+        .collapsible-form {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .collapsible-form.show {
+            display: block;
         }
 
         .form-group {
@@ -117,10 +152,91 @@
             cursor: pointer;
             width: 100%;
             transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .submit-btn:hover {
             background-color: var(--accent-hover);
+        }
+
+        /* Botón de despliegue principal */
+        .toggle-form-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .toggle-form-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        /* Estilos de la tabla de registros del CIF */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-muted);
+            background-color: rgba(15, 23, 42, 0.4);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: rgba(51, 65, 85, 0.2);
+        }
+
+        .badge-role {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: help;
+            position: relative;
+        }
+        .role-admin { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .role-analyst { background-color: rgba(59, 130, 246, 0.15); color: var(--info); }
+        .role-operator { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .role-manager { background-color: rgba(16, 185, 129, 0.15); color: var(--accent); }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.3rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+            color: var(--text-muted);
+        }
+        .btn-icon:hover {
+            background-color: var(--border-color);
+            color: var(--text-main);
+        }
+        .btn-delete:hover {
+            color: var(--danger);
         }
     </style>
 </head>
@@ -128,67 +244,166 @@
 
     <div class="admin-container">
         <header>
-            <h1>Gestión Corporativa (Administrador)</h1>
+            <h1>
+                <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i> 
+                Gestión Corporativa - EcoGrid Power Trading S.L. (CIF: B-87654321) <!--ejemplo de nombre de empresa para pruebas-->
+            </h1>
             <div class="nav-links">
-                <a href="dashboard.html">Ir al Dashboard</a>
-                <a href="index.html">Cerrar Sesión</a>
+                <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Ir al Dashboard</a>
+                <a href="index.html"><i data-lucide="log-out" style="width: 16px; height: 16px;"></i> Cerrar Sesión</a>
             </div>
         </header>
 
+        <!-- TARJETA PRINCIPAL: DIRECTORIO DE USUARIOS CON BOTÓN DESPLEGABLE DE ALTA -->
         <div class="card">
-            <h2>Dar de Alta a Nuevo Trabajador</h2>
-            <form id="createUserForm" onsubmit="handleCreateUser(event)">
-                <div class="form-group">
-                    <label for="workerName">Nombre Completo</label>
-                    <input type="text" id="workerName" required>
-                </div>
+            <div class="card-header-flex">
+                <h2><i data-lucide="users" style="width: 20px; height: 20px;"></i> Directorio de Personal Registrado</h2>
+                <button class="toggle-form-btn" onclick="toggleCreateForm()" id="toggleBtn">
+                    <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i> Nuevo Trabajador
+                </button>
+            </div>
 
-                <div class="form-group">
-                    <label for="workerEmail">Correo Electrónico Corporativo</label>
-                    <input type="email" id="workerEmail" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="workerPassword">Contraseña Temporal</label>
-                    <input type="password" id="workerPassword" minlength="8" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="workerRole">Rol y Permisos del Sistema</label>
-                    <select id="workerRole" onchange="updateRoleDescription()" required>
-                        <option value="" selected>Selecciona un rol corporativo...</option>
-                        <option value="trader">Gestor de Compra de Energía (Trader)</option>
-                        <option value="operator">Operador de Red y Monitorización</option>
-                        <option value="auditor">Auditor / Responsable Financiero</option>
-                    </select>
-                    <div id="roleDescBox" class="role-description">
-                        Selecciona un rol para ver el detalle de los accesos asociados en la plataforma.
+            <!-- FORMULARIO DESPLEGABLE DE ALTA -->
+            <div id="createFormContainer" class="collapsible-form">
+                <form id="createUserForm" onsubmit="handleCreateUser(event)">
+                    <div class="form-group">
+                        <label for="workerName">Nombre Completo</label>
+                        <input type="text" id="workerName" required>
                     </div>
-                </div>
 
-                <button type="submit" class="submit-btn">Registrar Usuario en la Empresa</button>
-            </form>
+                    <div class="form-group">
+                        <label for="workerEmail">Correo Electrónico Corporativo</label>
+                        <input type="email" id="workerEmail" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workerPassword">Contraseña Temporal</label>
+                        <input type="password" id="workerPassword" minlength="8" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workerRole">Rol y Permisos del Sistema</label>
+                        <select id="workerRole" onchange="updateRoleDescription()" required>
+                            <option value="" selected>Selecciona un rol corporativo...</option>
+                            <option value="MANAGER">Gestor de Compra de Energía (Trader)</option>
+                            <option value="OPERATOR">Operador de Red y Monitorización</option>
+                            <option value="ANALYST">Analista / Responsable Financiero (Auditor)</option>
+                        </select>
+                        <div id="roleDescBox" class="role-description">
+                            Selecciona un rol para ver el detalle de los accesos asociados en la plataforma.
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <i data-lucide="user-check" style="width: 18px; height: 18px;"></i> Registrar Usuario en la Empresa
+                    </button>
+                </form>
+            </div>
+
+            <!-- TABLA DE REGISTROS -->
+            <div class="table-responsive" style="margin-top: 1rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre / Correo</th>
+                            <th>CIF Vinculado</th>
+                            <th>Rol Asignado</th>
+                            <th>Fecha de Alta</th>
+                            <th style="text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Se poblará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
     const descriptions = {
-        trader: [
+        MANAGER: [
             "Acceso a la curva de demanda predicha a 24h",
             "Precios marginales OMIE",
             "Herramientas de ajuste para la mesa de contratación"
         ],
-        operator: [
+        OPERATOR: [
             "Supervisión de curvas horarias",
             "Filtros territoriales por CCAA",
             "Gestión de alertas tempranas"
         ],
-        auditor: [
+        ANALYST: [
             "Acceso al histórico de desviaciones",
             "Cálculo de sobrecostes estimados en euros (€)",
             "Generación de informes de auditoría"
         ]
     };
+
+    // Diccionario de leyendas detalladas para los tooltips 
+    const roleTooltips = {
+        'ADMIN': 'Administrador: Control total corporativo, gestión de personal, altas, modificaciones y visibilidad global de la plataforma.',
+        'ANALYST': 'Analista / Auditor: Acceso a métricas de ML, histórico de desviaciones, cálculo de sobrecostes en € e informes de auditoría.',
+        'OPERATOR': 'Operador de Red: Supervisión de curvas horarias, filtros territoriales por CCAA y gestión de alertas tempranas en tiempo real.',
+        'MANAGER': 'Gestor de Compra: Enfoque financiero, acceso a curva predicha 24h, precios OMIE y herramientas de ajuste para contratación.'
+    };
+
+    let companyUsers = [
+        { id: 1, name: "Ana Martínez", email: "analista@ecogrid.com", role: "ANALYST", cif: "B-87654321", date: "12/03/2026" },
+        { id: 2, name: "Carlos Ruiz", email: "operador@ecogrid.com", role: "OPERATOR", cif: "B-87654321", date: "15/04/2026" },
+        { id: 3, name: "Lucía Gómez", email: "gestor@ecogrid.com", role: "MANAGER", cif: "B-87654321", date: "01/06/2026" }
+    ];
+
+    function toggleCreateForm() {
+        const formContainer = document.getElementById('createFormContainer');
+        const toggleBtn = document.getElementById('toggleBtn');
+        
+        formContainer.classList.toggle('show');
+        
+        if (formContainer.classList.contains('show')) {
+            toggleBtn.innerHTML = '<i data-lucide="x" style="width: 16px; height: 16px;"></i> Cancelar';
+        } else {
+            toggleBtn.innerHTML = '<i data-lucide="user-plus" style="width: 16px; height: 16px;"></i> Nuevo Trabajador';
+        }
+        lucide.createIcons();
+    }
+
+    function renderUsersTable() {
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
+
+        const roleClasses = {
+            'ADMIN': 'role-admin',
+            'ANALYST': 'role-analyst',
+            'OPERATOR': 'role-operator',
+            'MANAGER': 'role-manager'
+        };
+
+        const roleLabels = {
+            'ADMIN': 'Administrador',
+            'ANALYST': 'Analista / Auditor',
+            'OPERATOR': 'Operador de Red',
+            'MANAGER': 'Gestor de Compra'
+        };
+
+        companyUsers.forEach(user => {
+            const tr = document.createElement('tr');
+            const tooltipText = roleTooltips[user.role] || 'Permisos asociados al rol en EcoGrid Analytics.';
+            
+            tr.innerHTML = `
+                <td><strong>${user.name}</strong><br><span style="font-size: 0.8rem; color: var(--text-muted);">${user.email}</span></td>
+                <td>${user.cif}</td>
+                <td><span class="badge-role ${roleClasses[user.role] || 'role-analyst'}" title="${tooltipText}">${roleLabels[user.role] || user.role}</span></td>
+                <td>${user.date}</td>
+                <td style="text-align: center;">
+                    <button class="btn-icon" onclick="editUser(${user.id})" title="Modificar"><i data-lucide="pencil" style="width: 16px; height: 16px;"></i></button>
+                    <button class="btn-icon btn-delete" onclick="deleteUser(${user.id})" title="Eliminar"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        lucide.createIcons();
+    }
 
     function updateRoleDescription() {
         const select = document.getElementById('workerRole');
@@ -200,7 +415,6 @@
             return;
         }
 
-        // Generar la lista con viñetas dinámicamente
         const items = descriptions[selectedVal];
         let htmlList = '<ul style="margin: 0; padding-left: 20px; line-height: 1.5;">';
         items.forEach(item => {
@@ -215,11 +429,63 @@
         e.preventDefault();
         const name = document.getElementById('workerName').value;
         const email = document.getElementById('workerEmail').value;
+        const role = document.getElementById('workerRole').value;
 
-        alert(`Trabajador ${name} (${email}) registrado con éxito con el rol asignado.`);
+        const newUser = {
+            id: Date.now(),
+            name: name,
+            email: email,
+            role: role,
+            cif: "B-87654321",
+            date: new Date().toLocaleDateString('es-ES')
+        };
+
+        companyUsers.push(newUser);
+        renderUsersTable();
+        toggleCreateForm(); // Ocultar el formulario tras el registro exitoso
+
+        alert(`Trabajador ${name} (${email}) registrado con éxito.`);
         document.getElementById('createUserForm').reset();
         document.getElementById('roleDescBox').textContent = "Selecciona un rol para ver el detalle de los accesos asociados en la plataforma.";
     }
+
+    function deleteUser(id) {
+        if (confirm("¿Estás seguro de que deseas eliminar este usuario del CIF corporativo?")) {
+            companyUsers = companyUsers.filter(u => u.id !== id);
+            renderUsersTable();
+        }
+    }
+
+    function editUser(id) {
+        const user = companyUsers.find(u => u.id === id);
+        if (!user) return;
+
+        const newName = prompt("Modificar nombre completo:", user.name);
+        if (newName === null) return;
+
+        const newEmail = prompt("Modificar correo electrónico corporativo:", user.email);
+        if (newEmail === null) return;
+
+        const newRole = prompt("Modificar rol (MANAGER, OPERATOR, ANALYST):", user.role);
+        if (newRole === null) return;
+
+        const upperRole = newRole.toUpperCase();
+        if (!['MANAGER', 'OPERATOR', 'ANALYST', 'ADMIN'].includes(upperRole)) {
+            alert("Rol no válido. Debe ser MANAGER, OPERATOR o ANALYST.");
+            return;
+        }
+
+        user.name = newName;
+        user.email = newEmail;
+        user.role = upperRole;
+
+        renderUsersTable();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderUsersTable();
+        lucide.createIcons();
+    });
 </script>
 </body>
 </html>
