@@ -297,6 +297,17 @@
                     <label class="checkbox-item"><input type="checkbox" id="chkFestivos"> Calendario y Festivos BOE</label>
                     <label class="checkbox-item"><input type="checkbox" id="chkOmie" checked> Precios de Mercado OMIE</label>
                 </div>
+                <!-- Desplegable para filtrar por Comunidad Autónoma (idCCAA) -->
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
+                    <label for="selectCCAA" style="font-size: 0.9rem; color: var(--text-muted);">Comunidad Autónoma (idCCAA):</label>
+                    <select id="selectCCAA" style="background-color: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; font-size: 0.9rem;" onchange="handleCCAAChange()">
+                        <option value="10">10 - Comunitat Valenciana</option>
+                        <option value="13">13 - Madrid, Comunidad de</option>
+                        <option value="09">09 - Cataluña</option>
+                        <option value="01">01 - Andalucía</option>
+                        <!-- Puedes añadir el resto de códigos CCAA según el listado oficial de tus compañeros -->
+                    </select>
+                </div>
                 <div class="button-group">
                     <button class="action-btn" onclick="runComparativePrediction()">Re-ejecutar Predicción IA</button>
                     <button class="secondary-btn" id="toggleTomorrowBtn" onclick="toggleTomorrowCurve()">
@@ -503,6 +514,17 @@
 
             demandChart.update();
             lucide.createIcons();
+        }
+
+        function handleCCAAChange() {
+            const selectedCCAA = document.getElementById('selectCCAA').value;
+            console.log(`Filtro territorial cambiado a idCCAA: ${selectedCCAA}`);
+            
+            // Aquí es donde harás la llamada a la API filtrando por región, por ejemplo:
+            // cargarDatosPorCCAA(selectedCCAA);
+            
+            // Para pruebas locales, simulamos una leve variación en los datos al cambiar de CCAA
+            runComparativePrediction();
         }
 
         lucide.createIcons();

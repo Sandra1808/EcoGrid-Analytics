@@ -13,18 +13,20 @@ function verifySessionAccess() {
 
     // ==========================================
     // MODO DESARROLLO (FORZAR ROL PARA PRUEBAS)
-    // Cambia esto a 'ADMIN', 'ANALYST', 'OPERATOR' o 'MANAGER' 
+    // Cambia esto a 'Administrador', 'Analista', 'Gestor' 
     // para probar cada vista al recargar la página.
     // ==========================================
-    const rolParaPruebas = 'MANAGER'; // Cambia temporalmente este valor para probar
+    const rolParaPruebas = 'Gestor'; // Cambia temporalmente este valor para probar
 
     if (!isLoginScreen) {
         sessionStorage.setItem('authRole', rolParaPruebas);
         sessionStorage.setItem('authUser', `${rolParaPruebas.toLowerCase()}@ecogrid.com`);
+        sessionStorage.setItem('authCif', 'A12345678');
     }
 
     const currentRole = sessionStorage.getItem('authRole');
     const currentUser = sessionStorage.getItem('authUser') || 'usuario@ecogrid.com';
+    const currentCif = sessionStorage.getItem('authCif') || ''; //Recuperamos el CIF de la empresa
 
     // Si no hay sesión activa y no estamos en el login, redirigir al acceso
     if (!currentRole && !isLoginScreen) {
@@ -58,10 +60,10 @@ function enforceRolePermissions(role, userEmail) {
 
     // Nombres descriptivos para los roles en la cabecera
     const roleTitles = {
-        'ADMIN': 'Panel Operativo - Administrador Empresa',
-        'ANALYST': 'Panel Operativo - Analista de Datos / ML',
-        'OPERATOR': 'Panel Operativo - Operador de Red',
-        'MANAGER': 'Panel Operativo - Gestor de Compra'
+        'Administrador': 'Panel Operativo - Administrador Empresa',
+        'Analista': 'Panel Operativo - Analista de Datos / ML',
+        'Operador': 'Panel Operativo - Operador de Red',
+        'Gestor': 'Panel Operativo - Gestor de Compra'
     };
 
     if (dashboardTitle) {
@@ -70,28 +72,28 @@ function enforceRolePermissions(role, userEmail) {
 
     // Por defecto, ocultamos el acceso de administración para todos salvo ADMIN
     if (adminLink) {
-        adminLink.style.display = (role === 'ADMIN') ? 'inline' : 'none';
+        adminLink.style.display = (role === 'Administrador') ? 'inline' : 'none';
     }
 
     // Ajustar visibilidad de las secciones según las responsabilidades de la matriz corporativa
     switch (role) {
-        case 'ANALYST':
+        case 'Analista':
             if (financialSection) financialSection.style.display = 'none';
             break;
 
-        case 'OPERATOR':
+        case 'Operador':
             if (mlMetricsSection) mlMetricsSection.style.display = 'none';
             if (controlPanelSection) controlPanelSection.style.display = 'none';
             if (financialSection) financialSection.style.display = 'none';
             break;
 
-        case 'MANAGER':
+        case 'Gestor':
             if (mlMetricsSection) mlMetricsSection.style.display = 'none';
             if (controlPanelSection) controlPanelSection.style.display = 'none'; 
             if (operationalAlerts) operationalAlerts.style.display = 'none';
             break;
 
-        case 'ADMIN':
+        case 'Administrador':
             // El administrador tiene acceso a todas las secciones
             break;
 
