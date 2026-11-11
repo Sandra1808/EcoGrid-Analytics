@@ -3,7 +3,7 @@ package EcoGrid.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public record PrediccionResponse(
+public record PrediccionDto(
         Instant fechaHora,
         BigDecimal demandaPredichaMw,
         BigDecimal demandaBaselineMw

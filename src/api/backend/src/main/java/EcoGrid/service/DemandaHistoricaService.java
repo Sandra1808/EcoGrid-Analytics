@@ -1,7 +1,7 @@
 package EcoGrid.service;
 
 import EcoGrid.dao.DemandageneracionreeRepository;
-import EcoGrid.dto.DemandaHistoricaResponse;
+import EcoGrid.dto.DemandaHistoricaDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +22,7 @@ public class DemandaHistoricaService {
     }
 
     @Transactional(readOnly = true)
-    public List<DemandaHistoricaResponse> buscar(
+    public List<DemandaHistoricaDto> buscar(
             Long ccaaId, Instant desde, Instant hasta) {
 
         if (desde.isAfter(hasta)) {
@@ -38,7 +38,7 @@ public class DemandaHistoricaService {
                 .findByIdccaa_IdAndIdtiempo_FechoraBetweenOrderByIdtiempo_FechoraAsc(
                         ccaaId, desdeOracle, hastaOracle)
                 .stream()
-                .map(d -> new DemandaHistoricaResponse(
+                .map(d -> new DemandaHistoricaDto(
                         d.getIdtiempo().getFechora().toInstant(ZoneOffset.UTC),
                         d.getDemandarealmw(),
                         d.getDemandaprevistareemw(),

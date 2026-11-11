@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-public record PrediccionLoteRequest(
+public record PrediccionLoteDto(
         @NotNull @Positive Long modeloId,
         @NotEmpty @Size(min = 24, max = 24)
         List<@NotNull @Valid Punto> predicciones

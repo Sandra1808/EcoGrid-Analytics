@@ -18,4 +18,8 @@ public interface PrediccionesdemandaRepository
     List<Prediccionesdemanda>
     findByIdccaa_IdAndIdtiempo_FechoraBetweenOrderByIdtiempo_FechoraAsc(
             Long ccaaId, LocalDateTime desde, LocalDateTime hasta);
+
+    @EntityGraph(attributePaths = "idtiempo")
+    Optional<Prediccionesdemanda>
+    findFirstByIdccaa_IdOrderByIdtiempo_FechoraDesc(Long ccaaId);
 }

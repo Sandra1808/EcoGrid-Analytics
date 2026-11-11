@@ -5,8 +5,8 @@ import EcoGrid.dao.FestivosboeRepository;
 import EcoGrid.dao.ModelosmlRepository;
 import EcoGrid.dao.PrediccionesdemandaRepository;
 import EcoGrid.dao.TiempohorarioRepository;
-import EcoGrid.dto.PrediccionLoteRequest;
-import EcoGrid.dto.PrediccionResponse;
+import EcoGrid.dto.PrediccionDto;
+import EcoGrid.dto.PrediccionLoteDto;
 import EcoGrid.entity.Comunidadautonoma;
 import EcoGrid.entity.Modelosml;
 import EcoGrid.entity.Prediccionesdemanda;
@@ -19,7 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.Map;
 public class PrediccionesService {
 
     private static final Long ID_ESPANA = 1L;
+    private static final ZoneId ZONA_ESPANA = ZoneId.of("Europe/Madrid");
     private static final DateTimeFormatter ID_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMMddHH");
 
@@ -52,7 +55,7 @@ public class PrediccionesService {
     }
 
     @Transactional
-    public int guardarLote(PrediccionLoteRequest request) {
+    public int guardarLote(PrediccionLoteDto request) {
         Modelosml modelo = modelosRepository.findById(request.modeloId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "El modelo indicado no existe"));
@@ -79,20 +82,21 @@ public class PrediccionesService {
                         "Las 24 predicciones deben ser horas consecutivas y ordenadas");
             }
 
-            LocalDateTime fechaHora = LocalDateTime.ofInstant(
+            LocalDateTime fechaHoraUtc = LocalDateTime.ofInstant(
                     punto.fechaHora(), ZoneOffset.UTC);
 
-            if (fechaHora.getMinute() != 0
-                    || fechaHora.getSecond() != 0
-                    || fechaHora.getNano() != 0) {
+            if (fechaHoraUtc.getMinute() != 0
+                    || fechaHoraUtc.getSecond() != 0
+                    || fechaHoraUtc.getNano() != 0) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Cada fechaHora debe estar alineada al inicio de una hora UTC");
             }
 
-            Long idTiempo = Long.valueOf(fechaHora.format(ID_FORMAT));
+            Long idTiempo = Long.valueOf(fechaHoraUtc.format(ID_FORMAT));
             Tiempohorario tiempo = tiempoRepository.findById(idTiempo)
-                    .orElseGet(() -> crearTiempo(fechaHora, idTiempo, festivosCache));
+                    .orElseGet(() ->
+                            crearTiempo(fechaHoraUtc, idTiempo, festivosCache));
 
             Prediccionesdemanda prediccion =
                     prediccionesRepository
@@ -114,7 +118,7 @@ public class PrediccionesService {
     }
 
     @Transactional(readOnly = true)
-    public List<PrediccionResponse> listarNacional(Instant desde, Instant hasta) {
+    public List<PrediccionDto> listarNacional(Instant desde, Instant hasta) {
         if (desde.isAfter(hasta)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -128,7 +132,7 @@ public class PrediccionesService {
                 .findByIdccaa_IdAndIdtiempo_FechoraBetweenOrderByIdtiempo_FechoraAsc(
                         ID_ESPANA, desdeDb, hastaDb)
                 .stream()
-                .map(p -> new PrediccionResponse(
+                .map(p -> new PrediccionDto(
                         p.getIdtiempo().getFechora().toInstant(ZoneOffset.UTC),
                         p.getDemandapredichamw(),
                         p.getDemandabaselinemw()))
@@ -136,25 +140,30 @@ public class PrediccionesService {
     }
 
     private Tiempohorario crearTiempo(
-            LocalDateTime fechaHora,
+            LocalDateTime fechaHoraUtc,
             Long idTiempo,
             Map<LocalDate, Boolean> festivosCache) {
-        LocalDate fecha = fechaHora.toLocalDate();
-        int diaSemana = fecha.getDayOfWeek().getValue();
+
+        ZonedDateTime fechaHoraMadrid = fechaHoraUtc
+                .atOffset(ZoneOffset.UTC)
+                .atZoneSameInstant(ZONA_ESPANA);
+
+        LocalDate fechaMadrid = fechaHoraMadrid.toLocalDate();
+        int diaSemana = fechaMadrid.getDayOfWeek().getValue();
         boolean finDeSemana = diaSemana >= 6;
         boolean festivo = festivosCache.computeIfAbsent(
-                fecha,
+                fechaMadrid,
                 dia -> festivosRepository.existsByFechaAndAmbitoIgnoreCase(
                         dia, "Nacional"));
 
         Tiempohorario tiempo = new Tiempohorario();
         tiempo.setId(idTiempo);
-        tiempo.setFechora(fechaHora);
-        tiempo.setFecha(fecha);
-        tiempo.setHora((short) fechaHora.getHour());
+        tiempo.setFechora(fechaHoraUtc);
+        tiempo.setFecha(fechaMadrid);
+        tiempo.setHora((short) fechaHoraMadrid.getHour());
         tiempo.setDiasemana(diaSemana);
-        tiempo.setMes((short) fechaHora.getMonthValue());
-        tiempo.setYear((short) fechaHora.getYear());
+        tiempo.setMes((short) fechaMadrid.getMonthValue());
+        tiempo.setYear((short) fechaMadrid.getYear());
         tiempo.setIndfinsemana(finDeSemana);
         tiempo.setIndfestivo(festivo);
 
