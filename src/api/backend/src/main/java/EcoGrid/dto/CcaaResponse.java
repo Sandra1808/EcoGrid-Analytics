@@ -1,4 +1,4 @@
-package EcoGrid.Backend.dto;
+package EcoGrid.dto;
 
 public record CcaaResponse(
         Long id,

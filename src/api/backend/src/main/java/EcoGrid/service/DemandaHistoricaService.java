@@ -1,7 +1,7 @@
-package EcoGrid.Backend.service;
+package EcoGrid.service;
 
-import EcoGrid.Backend.dao.DemandageneracionreeRepository;
-import EcoGrid.Backend.dto.DemandaHistoricaResponse;
+import EcoGrid.dao.DemandageneracionreeRepository;
+import EcoGrid.dto.DemandaHistoricaResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

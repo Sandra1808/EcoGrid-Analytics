@@ -1,6 +1,6 @@
-package EcoGrid.Backend.dao;
+package EcoGrid.dao;
 
-import EcoGrid.Backend.entity.Demandageneracionree;
+import EcoGrid.entity.Demandageneracionree;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDateTime;
 import java.time.Instant;

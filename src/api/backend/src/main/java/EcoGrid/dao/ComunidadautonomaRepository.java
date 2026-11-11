@@ -1,6 +1,6 @@
-package EcoGrid.Backend.dao;
+package EcoGrid.dao;
 
-import EcoGrid.Backend.entity.Comunidadautonoma;
+import EcoGrid.entity.Comunidadautonoma;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ComunidadautonomaRepository
