@@ -347,11 +347,7 @@
         'MANAGER': 'Gestor de Compra: Enfoque financiero, acceso a curva predicha 24h, precios OMIE y herramientas de ajuste para contratación.'
     };
 
-    let companyUsers = [
-        { id: 1, name: "Ana Martínez", email: "analista@ecogrid.com", role: "ANALYST", cif: "B-87654321", date: "12/03/2026" },
-        { id: 2, name: "Carlos Ruiz", email: "operador@ecogrid.com", role: "OPERATOR", cif: "B-87654321", date: "15/04/2026" },
-        { id: 3, name: "Lucía Gómez", email: "gestor@ecogrid.com", role: "MANAGER", cif: "B-87654321", date: "01/06/2026" }
-    ];
+    let companyUsers = [];
 
     function toggleCreateForm() {
         const formContainer = document.getElementById('createFormContainer');
@@ -482,8 +478,44 @@
         renderUsersTable();
     }
 
+    async function loadUsers() {
+        const tbody = document.getElementById('usersTableBody');
+
+        try {
+            const response = await fetch('http://localhost:8080/api/users');
+            if (!response.ok) {
+                throw new Error(`Error HTTP ${response.status}`);
+            }
+
+            const users = await response.json();
+            if (!Array.isArray(users) || !users.every(user => user && typeof user === 'object')) {
+                throw new Error('La respuesta del servidor no contiene una lista de usuarios válida');
+            }
+
+            companyUsers = users.map(user => ({
+                id: user.id,
+                name: user.nombre || '',
+                email: user.email || '',
+                role: (user.rol || '').toUpperCase(),
+                cif: user.cif || '',
+                date: user.fechaAlta
+                    ? new Date(user.fechaAlta).toLocaleDateString('es-ES')
+                    : '—'
+            }));
+            renderUsersTable();
+        } catch (error) {
+            companyUsers = [];
+            tbody.replaceChildren();
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 5;
+            cell.textContent = `No se pudieron cargar los usuarios: ${error.message}`;
+            console.error('Error al cargar los usuarios desde la API:', error);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        renderUsersTable();
+        loadUsers();
         lucide.createIcons();
     });
 </script>
