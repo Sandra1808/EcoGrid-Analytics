@@ -12,6 +12,14 @@ __pycache__/
 
 # Configuración local y secretos
 .env
+wallet/
+*wallet*/
+*.sso
+ewallet.p12
+ewallet.pem
+tnsnames.ora
+sqlnet.ora
+ojdbc.properties
 .vscode/
 .idea/
 

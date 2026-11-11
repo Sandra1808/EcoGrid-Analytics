@@ -7,12 +7,16 @@ from typing import Dict, Any, List, Optional, Union
 from datetime import datetime
 from pathlib import Path
 import json
+import logging
 import os
 
+from oracle_store import persist_to_oracle
 from src.config.settings import DATA_RAW_DIR, ESIOS_API_TOKEN
 from src.connectors.meteo_client import OpenMeteoClient
 from src.connectors.omie_client import OMIEClient
 from src.connectors.ree_client import REEClient
+
+logger = logging.getLogger("EcoGrid.Ingestion")
 
 STATE_FILE = DATA_RAW_DIR.parent / "sources_state.json"
 
@@ -172,6 +176,12 @@ class IngestionService:
                 result["success"] = False
                 result["error"] = f"Error al guardar archivo en disco: {e}"
                 saved_filename = None
+
+        if result.get("success") and saved_filename is not None:
+            try:
+                persist_to_oracle(source_id, file_path)
+            except Exception as oracle_err:
+                logger.warning("Error no bloqueante al persistir %s en Oracle: %s", source_id, oracle_err)
 
         # Registrar estado de la última ejecución
         status_label = "SUCCESS" if result.get("success") else "ERROR"
