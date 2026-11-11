@@ -371,10 +371,10 @@
         }
 
         const ctx = document.getElementById('demandChart').getContext('2d');
-        const hours = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+        const hours = [];
 
-        let currentData = [18, 17, 16, 15, 15, 16, 19, 22, 25, 27, 28, 27, 26, 25, 26, 28, 30, 33, 35, 34, 31, 27, 23, 20];
-        let tomorrowData = [17.5, 16.8, 15.5, 14.8, 14.9, 16.2, 18.5, 21.8, 24.5, 26.8, 27.5, 26.8, 25.5, 24.8, 25.8, 27.8, 29.5, 32.5, 34.8, 33.5, 30.5, 26.8, 22.5, 19.5];
+        let currentData = [];
+        let tomorrowData = [];
 
         function updateMetrics(real, pred) {
             let n = real.length;
@@ -404,30 +404,19 @@
             let minIndex = data.indexOf(minVal);
             let maxIndex = data.indexOf(maxVal);
 
-            let minHour = hours[minIndex];
-            let maxHour = hours[maxIndex];
+            let minHour = hours[minIndex] || '00:00';
+            let maxHour = hours[maxIndex] || '00:00';
 
             document.getElementById('textOptimal').innerHTML = `<strong>Punto Óptimo de Compra:</strong> ${minHour} (Mín: ${minVal.toFixed(1)} MW)`;
             document.getElementById('textCritical').innerHTML = `<strong>Punto Más Crítico / Pico:</strong> ${maxHour} (Máx: ${maxVal.toFixed(1)} MW)`;
 
             return { minIndex, maxIndex };
         }
-        let { minIndex, maxIndex } = updateExtremes(tomorrowData);
-
-        function getPointRadii(data, minIdx, maxIdx) {
-            return data.map((_, i) => (i === minIdx || i === maxIdx) ? 8 : 3);
-        }
-
-        function getPointColors(data, minIdx, maxIdx) {
-            return data.map((_, i) => i === minIdx ? '#10b981' : (i === maxIdx ? '#ef4444' : '#10b981'));
-        }
-
-        updateMetrics(currentData, tomorrowData);
-
+        
         const demandChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: hours,
+                labels: [],
                 datasets: [
                     {
                         label: 'Demanda Real (MW)',
@@ -439,7 +428,7 @@
                         fill: false
                     },
                     {
-                        label: 'Predicción IA - Random Forest (MW)',
+                        label: 'Demanda Predicha (MW)',
                         data: tomorrowData,
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -447,8 +436,8 @@
                         borderDash: [5, 5],
                         tension: 0.3,
                         fill: false,
-                        pointRadius: getPointRadii(tomorrowData, minIndex, maxIndex),
-                        pointBackgroundColor: getPointColors(tomorrowData, minIndex, maxIndex),
+                        pointRadius: 3,
+                        pointBackgroundColor: '#10b981',
                         pointHoverRadius: 10
                     }
                 ]
@@ -468,8 +457,6 @@
                         grid: { color: '#334155' } 
                     },
                     y: { 
-                        min: 10,
-                        max: 40,
                         title: { display: true, text: 'Demanda Eléctrica (MW)', color: '#94a3b8' },
                         ticks: { color: '#94a3b8' }, 
                         grid: { color: '#334155' } 
@@ -503,31 +490,100 @@
                 document.getElementById('toggleTomorrowBtn').innerHTML = '<i data-lucide="eye-off" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Ocultar Curva Predicha';
             }
 
-            tomorrowData = tomorrowData.map(val => +(val * (1 + (Math.random() * 0.08 - 0.04))).toFixed(1));
+            const today = new Date();
+            const fecha = [
+                today.getFullYear(),
+                String(today.getMonth() + 1).padStart(2, '0'),
+                String(today.getDate()).padStart(2, '0')
+            ].join('-');
+            const ccaaId = document.getElementById('selectCCAA').value || '10';
+            const params = new URLSearchParams({ fecha, ccaaId });
 
-            updateMetrics(currentData, tomorrowData);
-            let { minIndex, maxIndex } = updateExtremes(tomorrowData);
+            fetch(`http://localhost:8080/api/demand/series?${params}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(series => {
+                    if (!Array.isArray(series)) {
+                        throw new Error('La API devolvió un formato de serie no válido');
+                    }
 
-            dataset.data = tomorrowData;
-            dataset.pointRadius = getPointRadii(tomorrowData, minIndex, maxIndex);
-            dataset.pointBackgroundColor = getPointColors(tomorrowData, minIndex, maxIndex);
+                    const points = series
+                        .filter(point =>
+                            point.demandaRealMWH != null &&
+                            point.demandaPredichaMWH != null
+                        )
+                        .map(point => ({
+                            fechaHora: point.fecHora,
+                            real: Number(point.demandaRealMWH),
+                            predicha: Number(point.demandaPredichaMWH)
+                        }))
+                        .filter(point =>
+                            Number.isFinite(point.real) &&
+                            Number.isFinite(point.predicha)
+                        );
 
-            demandChart.update();
-            lucide.createIcons();
+                    if (points.length === 0) {
+                        currentData = [];
+                        tomorrowData = [];
+                        hours.splice(0, hours.length);
+                        demandChart.data.labels = hours;
+                        demandChart.data.datasets[0].data = currentData;
+                        dataset.data = tomorrowData;
+                        demandChart.update();
+                        ['valMAE', 'valRMSE'].forEach(id => {
+                            document.getElementById(id).textContent = '-- MW';
+                        });
+                        document.getElementById('valMAPE').textContent = '-- %';
+                        document.getElementById('textOptimal').innerHTML =
+                            '<strong>Punto Óptimo de Compra:</strong> Sin datos';
+                        document.getElementById('textCritical').innerHTML =
+                            '<strong>Punto Más Crítico / Pico:</strong> Sin datos';
+                        return;
+                    }
+
+                    currentData.length = 0;
+                    currentData.push(...points.map(point => point.real));
+
+                    tomorrowData.length = 0;
+                    tomorrowData.push(...points.map(point => point.predicha));
+
+                    hours.length = 0;
+                    hours.push(...points.map(point => new Date(point.fechaHora)
+                        .toLocaleTimeString('es-ES', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Europe/Madrid'
+                        })
+                    ));
+
+                    updateMetrics(currentData, tomorrowData);
+                    const { minIndex, maxIndex } = updateExtremes(tomorrowData);
+                    demandChart.data.labels = hours;
+                    demandChart.data.datasets[0].data = currentData;
+                    dataset.data = tomorrowData;
+                    dataset.pointRadius = 3;
+                    dataset.pointBackgroundColor = '#10b981';
+                    demandChart.update();
+                    lucide.createIcons();
+                })
+                .catch(error => {
+                    console.error('No se pudo cargar la serie de demanda desde la API:', error);
+                });
         }
 
         function handleCCAAChange() {
             const selectedCCAA = document.getElementById('selectCCAA').value;
             console.log(`Filtro territorial cambiado a idCCAA: ${selectedCCAA}`);
             
-            // Aquí es donde harás la llamada a la API filtrando por región, por ejemplo:
-            // cargarDatosPorCCAA(selectedCCAA);
-            
-            // Para pruebas locales, simulamos una leve variación en los datos al cambiar de CCAA
             runComparativePrediction();
         }
 
         lucide.createIcons();
+        runComparativePrediction();
 
     </script>
 </body>
