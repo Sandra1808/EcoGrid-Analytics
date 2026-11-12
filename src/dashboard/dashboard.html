@@ -289,9 +289,10 @@
             </div>
             <div class="metric-card">
                 <div class="title">Modelo Activo (MLOps)</div>
-                <div class="value" style="font-size: 1.2rem; margin-top: 0.4rem;">Random Forest</div>
-                <div class="badge badge-warning">modelo_predicion_24h.joblib</div>
+                 <div class="value" id="activeModelName">Cargando...</div>
+                <div class="badge badge-warning" id="activeModelVersion">Versión —</div>
             </div>
+            <!-- <div class="badge badge-warning" id="activeModelVersion">—</div> -->
         </div>
 
         <!-- SECCIÓN DE RESUMEN NACIONAL (/dashboard/summary) -->
@@ -341,12 +342,6 @@
                     <select id="comunidadSelect" style="background-color: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; font-size: 0.9rem;">
                         <!-- Se rellena dinámicamente desde apiService.getComunidades() -->
                     </select>
-                </div>
-                <div class="button-group">
-                    <button class="action-btn" id="runPredictionBtn">Re-ejecutar Predicción IA</button>
-                    <button class="secondary-btn" id="toggleTomorrowBtn">
-                        <i data-lucide="eye-off" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Ocultar Curva Predicha
-                    </button>
                 </div>
             </div>
         </div>
