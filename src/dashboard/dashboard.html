@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoGrid Analytics - Dashboard Operativo Dinámico</title>
-    <!--Lucide para los iconos descriptivos-->
+    <!-- Lucide para los iconos descriptivos -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Chart.js para las gráficas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -234,19 +234,33 @@
             color: var(--danger);
         }
 
-        /* SECCIÓN FINANCIERA PARA GESTORES */
         .financial-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 1.5rem;
         }
+
+        .errorContainer {
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
     <div class="dashboard-container">
-        <!--Título dinámico en función del rol y vista acceso exclusivo a Gestión admin a Administrados-->
+        <!-- Contenedor visible para errores de API -->
+        <div id="errorContainer" class="errorContainer" style="display: none;"></div>
+        
+        <!-- Contenedor para alertas operativas y mensajes dinámicos -->
+        <div id="alertsContainer" class="alerts-box" aria-live="polite"></div>
+
         <header>
             <h1 id="dashboardTitle">EcoGrid Analytics - Panel Operativo</h1>
             <div class="nav-links">
@@ -256,7 +270,7 @@
             </div>
         </header>
 
-        <!-- SECCIÓN DE MÉTRICAS DE MACHINE LEARNING (Visible para Analista y Admin) -->
+        <!-- SECCIÓN DE MÉTRICAS DE MACHINE LEARNING -->
         <div id="mlMetricsSection" class="metrics-grid">
             <div class="metric-card">
                 <div class="title">Error Absoluto Medio (MAE)</div>
@@ -280,9 +294,28 @@
             </div>
         </div>
 
+        <!-- SECCIÓN DE RESUMEN NACIONAL (/dashboard/summary) -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="title">Demanda Actual <span id="labelNacionalKpi" style="font-size:0.75rem; color:var(--warning);">(Nacional)</span></div>
+                <div class="value" id="kpiDemandaActual">-- MW</div>
+                <div class="badge badge-success">Tiempo real</div>
+            </div>
+            <div class="metric-card">
+                <div class="title">Demanda Prevista <span style="font-size:0.75rem; color:var(--warning);">(Nacional)</span></div>
+                <div class="value" id="kpiDemandaPrevista">-- MW</div>
+                <div class="badge badge-info">Previsión REE</div>
+            </div>
+            <div class="metric-card">
+                <div class="title">Coste Desvío Estimado <span style="font-size:0.75rem; color:var(--warning);">(Nacional)</span></div>
+                <div class="value" id="kpiCosteDesvio">-- €</div>
+                <div class="badge badge-warning">Impacto Económico</div>
+            </div>
+        </div>
+
         <!-- PANEL DE FILTROS Y CONTROL DE CURVAS -->
         <div class="control-panel" id="controlPanelSection">
-            <button class="dropdown-toggle-btn" onclick="toggleFilters()">
+            <button class="dropdown-toggle-btn" id="toggleFiltersBtn">
                 <span>
                     <i data-lucide="sliders-horizontal" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 6px;"></i> 
                     Configurar Filtros y Variables de Predicción
@@ -297,20 +330,21 @@
                     <label class="checkbox-item"><input type="checkbox" id="chkFestivos"> Calendario y Festivos BOE</label>
                     <label class="checkbox-item"><input type="checkbox" id="chkOmie" checked> Precios de Mercado OMIE</label>
                 </div>
-                <!-- Desplegable para filtrar por Comunidad Autónoma (idCCAA) -->
+                <!-- Selector de fecha dinámico -->
                 <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
-                    <label for="selectCCAA" style="font-size: 0.9rem; color: var(--text-muted);">Comunidad Autónoma (idCCAA):</label>
-                    <select id="selectCCAA" style="background-color: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; font-size: 0.9rem;" onchange="handleCCAAChange()">
-                        <option value="10">10 - Comunitat Valenciana</option>
-                        <option value="13">13 - Madrid, Comunidad de</option>
-                        <option value="09">09 - Cataluña</option>
-                        <option value="01">01 - Andalucía</option>
-                        <!-- Puedes añadir el resto de códigos CCAA según el listado oficial de tus compañeros -->
+                    <label for="fechaInput" style="font-size: 0.9rem; color: var(--text-muted);">Fecha de Consulta:</label>
+                    <input type="date" id="fechaInput" style="background-color: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                <!-- Desplegable para filtrar por Comunidad Autónoma -->
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
+                    <label for="comunidadSelect" style="font-size: 0.9rem; color: var(--text-muted);">Comunidad Autónoma (CCAA):</label>
+                    <select id="comunidadSelect" style="background-color: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px; font-size: 0.9rem;">
+                        <!-- Se rellena dinámicamente desde apiService.getComunidades() -->
                     </select>
                 </div>
                 <div class="button-group">
-                    <button class="action-btn" onclick="runComparativePrediction()">Re-ejecutar Predicción IA</button>
-                    <button class="secondary-btn" id="toggleTomorrowBtn" onclick="toggleTomorrowCurve()">
+                    <button class="action-btn" id="runPredictionBtn">Re-ejecutar Predicción IA</button>
+                    <button class="secondary-btn" id="toggleTomorrowBtn">
                         <i data-lucide="eye-off" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Ocultar Curva Predicha
                     </button>
                 </div>
@@ -324,267 +358,36 @@
                 <canvas id="demandChart"></canvas>
             </div>
 
-            <!-- ALERTAS Y PUNTOS CRÍTICOS/ÓPTIMOS (Visible para Operador y Admin) -->
+            <!-- ALERTAS Y PUNTOS CRÍTICOS/ÓPTIMOS -->
             <div id="operationalAlerts" class="alerts-box">
                 <div class="alert-badge alert-optimal">
                     <i data-lucide="sparkles" style="width: 18px; height: 18px; flex-shrink: 0; margin-right: 8px;"></i>
-                    <span id="textOptimal"><strong>Punto Óptimo de Compra:</strong> Calculando...</span>
+                    <span id="textOptimal"><strong>Punto Óptimo de Compra:</strong> Sin datos disponibles</span>
                 </div>
                 <div class="alert-badge alert-critical">
                     <i data-lucide="triangle-alert" style="width: 18px; height: 18px; flex-shrink: 0; margin-right: 8px;"></i>
-                    <span id="textCritical"><strong>Punto Más Crítico / Pico:</strong> Calculando...</span>
+                    <span id="textCritical"><strong>Punto Más Crítico / Pico:</strong> Sin datos disponibles</span>
                 </div>
             </div>
+        </div>
 
-        <!-- SECCIÓN DE IMPACTO ECONÓMICO Y COSTES (Visible para Gestor y Admin) -->
+        <!-- SECCIÓN DE IMPACTO ECONÓMICO Y COSTES -->
         <div id="financialSection" class="financial-card">
             <h3 style="margin-top: 0; color: var(--accent);">Matriz de Impacto Económico y Costes de Desvío</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem;">
                 <div style="background-color: var(--bg-primary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 0.8rem; color: var(--text-muted);">Coste Estimado de Desvío</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning); margin-top: 0.3rem;">1,420.50 €</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning); margin-top: 0.3rem;" id="kpiCosteDesvioFinanciero">-- €</div>
                 </div>
                 <div style="background-color: var(--bg-primary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="font-size: 0.8rem; color: var(--text-muted);">Ahorro en Mercado Diario</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent); margin-top: 0.3rem;">12.4%</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent); margin-top: 0.3rem;" id="kpiAhorroMercado">Sin datos disponibles</div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- MÓDULO EXTERNO DE CONTROL DE ACCESO -->
-    <script src="auth.js"></script>
     
-    <script>
-        function toggleFilters() {
-            const dropdown = document.getElementById('filterDropdown');
-            const arrowIcon = document.getElementById('arrowIcon');
-            
-            dropdown.classList.toggle('show');
-            
-            // Rotamos el icono de Lucide en lugar de eliminarlo
-            if (dropdown.classList.contains('show')) {
-                arrowIcon.style.transform = 'rotate(180deg)';
-            } else {
-                arrowIcon.style.transform = 'rotate(0deg)';
-            }
-        }
-
-        const ctx = document.getElementById('demandChart').getContext('2d');
-        const hours = [];
-
-        let currentData = [];
-        let tomorrowData = [];
-
-        function updateMetrics(real, pred) {
-            let n = real.length;
-            let sumAE = 0;
-            let sumSE = 0;
-            let sumAPE = 0;
-
-            for (let i = 0; i < n; i++) {
-                let diff = Math.abs(real[i] - pred[i]);
-                sumAE += diff;
-                sumSE += Math.pow(diff, 2);
-                sumAPE += (diff / real[i]);
-            }
-
-            let mae = sumAE / n;
-            let rmse = Math.sqrt(sumSE / n);
-            let mape = (sumAPE / n) * 100;
-
-            document.getElementById('valMAE').textContent = `${mae.toFixed(2)} MW`;
-            document.getElementById('valRMSE').textContent = `${rmse.toFixed(2)} MW`;
-            document.getElementById('valMAPE').textContent = `${mape.toFixed(2)} %`;
-        }
-
-       function updateExtremes(data) {
-            let minVal = Math.min(...data);
-            let maxVal = Math.max(...data);
-            let minIndex = data.indexOf(minVal);
-            let maxIndex = data.indexOf(maxVal);
-
-            let minHour = hours[minIndex] || '00:00';
-            let maxHour = hours[maxIndex] || '00:00';
-
-            document.getElementById('textOptimal').innerHTML = `<strong>Punto Óptimo de Compra:</strong> ${minHour} (Mín: ${minVal.toFixed(1)} MW)`;
-            document.getElementById('textCritical').innerHTML = `<strong>Punto Más Crítico / Pico:</strong> ${maxHour} (Máx: ${maxVal.toFixed(1)} MW)`;
-
-            return { minIndex, maxIndex };
-        }
-        
-        const demandChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [
-                    {
-                        label: 'Demanda Real (MW)',
-                        data: currentData,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: false
-                    },
-                    {
-                        label: 'Demanda Predicha (MW)',
-                        data: tomorrowData,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 2,
-                        borderDash: [5, 5],
-                        tension: 0.3,
-                        fill: false,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#10b981',
-                        pointHoverRadius: 10
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: { color: '#f8fafc' }
-                    }
-                },
-                scales: {
-                    x: { 
-                        title: { display: true, text: 'Horas del Día (00:00 - 23:00)', color: '#94a3b8' },
-                        ticks: { color: '#94a3b8' }, 
-                        grid: { color: '#334155' } 
-                    },
-                    y: { 
-                        title: { display: true, text: 'Demanda Eléctrica (MW)', color: '#94a3b8' },
-                        ticks: { color: '#94a3b8' }, 
-                        grid: { color: '#334155' } 
-                    }
-                }
-            }
-        });
-
-        function toggleTomorrowCurve() {
-            const dataset = demandChart.data.datasets[1];
-            const btn = document.getElementById('toggleTomorrowBtn');
-
-            dataset.hidden = !dataset.hidden;
-            demandChart.update();
-
-            if (dataset.hidden) {
-                btn.innerHTML = '<i data-lucide="eye" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Mostrar Curva Predicha';
-            } else {
-                btn.innerHTML = '<i data-lucide="eye-off" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Ocultar Curva Predicha';
-            }
-            
-            // Re-inicializar los iconos de Lucide para que pinte el nuevo svg generado por innerHTML
-            lucide.createIcons();
-        }
-
-        function runComparativePrediction() {
-            const dataset = demandChart.data.datasets[1];
-            
-            if (dataset.hidden) {
-                dataset.hidden = false;
-                document.getElementById('toggleTomorrowBtn').innerHTML = '<i data-lucide="eye-off" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;"></i> Ocultar Curva Predicha';
-            }
-
-            const today = new Date();
-            const fecha = [
-                today.getFullYear(),
-                String(today.getMonth() + 1).padStart(2, '0'),
-                String(today.getDate()).padStart(2, '0')
-            ].join('-');
-            const ccaaId = document.getElementById('selectCCAA').value || '10';
-            const params = new URLSearchParams({ fecha, ccaaId });
-
-            fetch(`http://localhost:8080/api/demand/series?${params}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(series => {
-                    if (!Array.isArray(series)) {
-                        throw new Error('La API devolvió un formato de serie no válido');
-                    }
-
-                    const points = series
-                        .filter(point =>
-                            point.demandaRealMWH != null &&
-                            point.demandaPredichaMWH != null
-                        )
-                        .map(point => ({
-                            fechaHora: point.fecHora,
-                            real: Number(point.demandaRealMWH),
-                            predicha: Number(point.demandaPredichaMWH)
-                        }))
-                        .filter(point =>
-                            Number.isFinite(point.real) &&
-                            Number.isFinite(point.predicha)
-                        );
-
-                    if (points.length === 0) {
-                        currentData = [];
-                        tomorrowData = [];
-                        hours.splice(0, hours.length);
-                        demandChart.data.labels = hours;
-                        demandChart.data.datasets[0].data = currentData;
-                        dataset.data = tomorrowData;
-                        demandChart.update();
-                        ['valMAE', 'valRMSE'].forEach(id => {
-                            document.getElementById(id).textContent = '-- MW';
-                        });
-                        document.getElementById('valMAPE').textContent = '-- %';
-                        document.getElementById('textOptimal').innerHTML =
-                            '<strong>Punto Óptimo de Compra:</strong> Sin datos';
-                        document.getElementById('textCritical').innerHTML =
-                            '<strong>Punto Más Crítico / Pico:</strong> Sin datos';
-                        return;
-                    }
-
-                    currentData.length = 0;
-                    currentData.push(...points.map(point => point.real));
-
-                    tomorrowData.length = 0;
-                    tomorrowData.push(...points.map(point => point.predicha));
-
-                    hours.length = 0;
-                    hours.push(...points.map(point => new Date(point.fechaHora)
-                        .toLocaleTimeString('es-ES', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            timeZone: 'Europe/Madrid'
-                        })
-                    ));
-
-                    updateMetrics(currentData, tomorrowData);
-                    const { minIndex, maxIndex } = updateExtremes(tomorrowData);
-                    demandChart.data.labels = hours;
-                    demandChart.data.datasets[0].data = currentData;
-                    dataset.data = tomorrowData;
-                    dataset.pointRadius = 3; 
-                    dataset.pointBackgroundColor = '#10b981';
-                    demandChart.update();
-                    lucide.createIcons();
-                })
-                .catch(error => {
-                    console.error('No se pudo cargar la serie de demanda desde la API:', error);
-                });
-        }
-
-        function handleCCAAChange() {
-            const selectedCCAA = document.getElementById('selectCCAA').value;
-            console.log(`Filtro territorial cambiado a idCCAA: ${selectedCCAA}`);
-            
-            runComparativePrediction();
-        }
-
-        lucide.createIcons();
-        runComparativePrediction();
-
-    </script>
+    <!-- ÚNICO PUNTO DE ENTRADA MODULAR (Gestiona toda la lógica y eventos) -->
+    <script type="module" src="./dashboard-api.js"></script>
 </body>
 </html>

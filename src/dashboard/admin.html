@@ -162,7 +162,6 @@
             background-color: var(--accent-hover);
         }
 
-        /* Botón de despliegue principal */
         .toggle-form-btn {
             background-color: var(--accent);
             color: white;
@@ -182,7 +181,6 @@
             background-color: var(--accent-hover);
         }
 
-        /* Estilos de la tabla de registros del CIF */
         .table-responsive {
             overflow-x: auto;
         }
@@ -215,7 +213,6 @@
             font-size: 0.75rem;
             font-weight: 600;
             cursor: help;
-            position: relative;
         }
         .role-admin { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
         .role-analyst { background-color: rgba(59, 130, 246, 0.15); color: var(--info); }
@@ -238,15 +235,30 @@
         .btn-delete:hover {
             color: var(--danger);
         }
+
+        /* Contenedor de errores visible */
+        #adminErrorContainer {
+            display: none;
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
     <div class="admin-container">
+        <!-- Contenedor visible para errores -->
+        <div id="adminErrorContainer"></div>
+
         <header>
             <h1>
                 <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i> 
-                Gestión Corporativa - EcoGrid Power Trading S.L. (CIF: B-87654321) <!--ejemplo de nombre de empresa para pruebas-->
+                Gestión Corporativa - EcoGrid Power Trading S.L.
             </h1>
             <div class="nav-links">
                 <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Ir al Dashboard</a>
@@ -254,18 +266,18 @@
             </div>
         </header>
 
-        <!-- TARJETA PRINCIPAL: DIRECTORIO DE USUARIOS CON BOTÓN DESPLEGABLE DE ALTA -->
+        <!-- TARJETA PRINCIPAL: DIRECTORIO DE USUARIOS -->
         <div class="card">
             <div class="card-header-flex">
                 <h2><i data-lucide="users" style="width: 20px; height: 20px;"></i> Directorio de Personal Registrado</h2>
-                <button class="toggle-form-btn" onclick="toggleCreateForm()" id="toggleBtn">
+                <button class="toggle-form-btn" id="toggleBtn">
                     <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i> Nuevo Trabajador
                 </button>
             </div>
 
             <!-- FORMULARIO DESPLEGABLE DE ALTA -->
             <div id="createFormContainer" class="collapsible-form">
-                <form id="createUserForm" onsubmit="handleCreateUser(event)">
+                <form id="createUserForm">
                     <div class="form-group">
                         <label for="workerName">Nombre Completo</label>
                         <input type="text" id="workerName" required>
@@ -277,17 +289,23 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="workerCIF">CIF de la Empresa / Tenant</label>
+                        <input type="text" id="workerCIF" required>
+                    </div>
+
+                    <div class="form-group">
                         <label for="workerPassword">Contraseña Temporal</label>
                         <input type="password" id="workerPassword" minlength="8" required>
                     </div>
 
                     <div class="form-group">
                         <label for="workerRole">Rol y Permisos del Sistema</label>
-                        <select id="workerRole" onchange="updateRoleDescription()" required>
+                        <select id="workerRole" required>
                             <option value="" selected>Selecciona un rol corporativo...</option>
                             <option value="MANAGER">Gestor de Compra de Energía (Trader)</option>
                             <option value="OPERATOR">Operador de Red y Monitorización</option>
                             <option value="ANALYST">Analista / Responsable Financiero (Auditor)</option>
+                            <option value="ADMIN">Administrador General</option>
                         </select>
                         <div id="roleDescBox" class="role-description">
                             Selecciona un rol para ver el detalle de los accesos asociados en la plataforma.
@@ -313,211 +331,14 @@
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <!-- Se poblará dinámicamente -->
+                        <!-- Se poblará dinámicamente mediante admin-api.js -->
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <script>
-    const descriptions = {
-        MANAGER: [
-            "Acceso a la curva de demanda predicha a 24h",
-            "Precios marginales OMIE",
-            "Herramientas de ajuste para la mesa de contratación"
-        ],
-        OPERATOR: [
-            "Supervisión de curvas horarias",
-            "Filtros territoriales por CCAA",
-            "Gestión de alertas tempranas"
-        ],
-        ANALYST: [
-            "Acceso al histórico de desviaciones",
-            "Cálculo de sobrecostes estimados en euros (€)",
-            "Generación de informes de auditoría"
-        ]
-    };
-
-    // Diccionario de leyendas detalladas para los tooltips 
-    const roleTooltips = {
-        'ADMIN': 'Administrador: Control total corporativo, gestión de personal, altas, modificaciones y visibilidad global de la plataforma.',
-        'ANALYST': 'Analista / Auditor: Acceso a métricas de ML, histórico de desviaciones, cálculo de sobrecostes en € e informes de auditoría.',
-        'OPERATOR': 'Operador de Red: Supervisión de curvas horarias, filtros territoriales por CCAA y gestión de alertas tempranas en tiempo real.',
-        'MANAGER': 'Gestor de Compra: Enfoque financiero, acceso a curva predicha 24h, precios OMIE y herramientas de ajuste para contratación.'
-    };
-
-    let companyUsers = [];
-
-    function toggleCreateForm() {
-        const formContainer = document.getElementById('createFormContainer');
-        const toggleBtn = document.getElementById('toggleBtn');
-        
-        formContainer.classList.toggle('show');
-        
-        if (formContainer.classList.contains('show')) {
-            toggleBtn.innerHTML = '<i data-lucide="x" style="width: 16px; height: 16px;"></i> Cancelar';
-        } else {
-            toggleBtn.innerHTML = '<i data-lucide="user-plus" style="width: 16px; height: 16px;"></i> Nuevo Trabajador';
-        }
-        lucide.createIcons();
-    }
-
-    function renderUsersTable() {
-        const tbody = document.getElementById('usersTableBody');
-        tbody.innerHTML = '';
-
-        const roleClasses = {
-            'ADMIN': 'role-admin',
-            'ANALYST': 'role-analyst',
-            'OPERATOR': 'role-operator',
-            'MANAGER': 'role-manager'
-        };
-
-        const roleLabels = {
-            'ADMIN': 'Administrador',
-            'ANALYST': 'Analista / Auditor',
-            'OPERATOR': 'Operador de Red',
-            'MANAGER': 'Gestor de Compra'
-        };
-
-        companyUsers.forEach(user => {
-            const tr = document.createElement('tr');
-            const tooltipText = roleTooltips[user.role] || 'Permisos asociados al rol en EcoGrid Analytics.';
-            
-            tr.innerHTML = `
-                <td><strong>${user.name}</strong><br><span style="font-size: 0.8rem; color: var(--text-muted);">${user.email}</span></td>
-                <td>${user.cif}</td>
-                <td><span class="badge-role ${roleClasses[user.role] || 'role-analyst'}" title="${tooltipText}">${roleLabels[user.role] || user.role}</span></td>
-                <td>${user.date}</td>
-                <td style="text-align: center;">
-                    <button class="btn-icon" onclick="editUser(${user.id})" title="Modificar"><i data-lucide="pencil" style="width: 16px; height: 16px;"></i></button>
-                    <button class="btn-icon btn-delete" onclick="deleteUser(${user.id})" title="Eliminar"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        lucide.createIcons();
-    }
-
-    function updateRoleDescription() {
-        const select = document.getElementById('workerRole');
-        const descBox = document.getElementById('roleDescBox');
-        const selectedVal = select.value;
-
-        if (!selectedVal || !descriptions[selectedVal]) {
-            descBox.textContent = "Selecciona un rol para ver el detalle de los accesos asociados en la plataforma.";
-            return;
-        }
-
-        const items = descriptions[selectedVal];
-        let htmlList = '<ul style="margin: 0; padding-left: 20px; line-height: 1.5;">';
-        items.forEach(item => {
-            htmlList += `<li>${item}</li>`;
-        });
-        htmlList += '</ul>';
-
-        descBox.innerHTML = htmlList;
-    }
-
-    function handleCreateUser(e) {
-        e.preventDefault();
-        const name = document.getElementById('workerName').value;
-        const email = document.getElementById('workerEmail').value;
-        const role = document.getElementById('workerRole').value;
-
-        const newUser = {
-            id: Date.now(),
-            name: name,
-            email: email,
-            role: role,
-            cif: "B-87654321",
-            date: new Date().toLocaleDateString('es-ES')
-        };
-
-        companyUsers.push(newUser);
-        renderUsersTable();
-        toggleCreateForm(); // Ocultar el formulario tras el registro exitoso
-
-        alert(`Trabajador ${name} (${email}) registrado con éxito.`);
-        document.getElementById('createUserForm').reset();
-        document.getElementById('roleDescBox').textContent = "Selecciona un rol para ver el detalle de los accesos asociados en la plataforma.";
-    }
-
-    function deleteUser(id) {
-        if (confirm("¿Estás seguro de que deseas eliminar este usuario del CIF corporativo?")) {
-            companyUsers = companyUsers.filter(u => u.id !== id);
-            renderUsersTable();
-        }
-    }
-
-    function editUser(id) {
-        const user = companyUsers.find(u => u.id === id);
-        if (!user) return;
-
-        const newName = prompt("Modificar nombre completo:", user.name);
-        if (newName === null) return;
-
-        const newEmail = prompt("Modificar correo electrónico corporativo:", user.email);
-        if (newEmail === null) return;
-
-        const newRole = prompt("Modificar rol (MANAGER, OPERATOR, ANALYST):", user.role);
-        if (newRole === null) return;
-
-        const upperRole = newRole.toUpperCase();
-        if (!['MANAGER', 'OPERATOR', 'ANALYST', 'ADMIN'].includes(upperRole)) {
-            alert("Rol no válido. Debe ser MANAGER, OPERATOR o ANALYST.");
-            return;
-        }
-
-        user.name = newName;
-        user.email = newEmail;
-        user.role = upperRole;
-
-        renderUsersTable();
-    }
-
-    async function loadUsers() {
-        const tbody = document.getElementById('usersTableBody');
-
-        try {
-            const response = await fetch('http://localhost:8080/api/users');
-            if (!response.ok) {
-                throw new Error(`Error HTTP ${response.status}`);
-            }
-
-            const users = await response.json();
-            if (!Array.isArray(users) || !users.every(user => user && typeof user === 'object')) {
-                throw new Error('La respuesta del servidor no contiene una lista de usuarios válida');
-            }
-
-            companyUsers = users.map(user => ({
-                id: user.id,
-                name: user.nombre || '',
-                email: user.email || '',
-                role: (user.rol || '').toUpperCase(),
-                cif: user.cif || '',
-                date: user.fechaAlta
-                    ? new Date(user.fechaAlta).toLocaleDateString('es-ES')
-                    : '—'
-            }));
-            renderUsersTable();
-        } catch (error) {
-            companyUsers = [];
-            tbody.replaceChildren();
-            const row = tbody.insertRow();
-            const cell = row.insertCell();
-            cell.colSpan = 5;
-            cell.textContent = `No se pudieron cargar los usuarios: ${error.message}`;
-            console.error('Error al cargar los usuarios desde la API:', error);
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        loadUsers();
-        lucide.createIcons();
-    });
-</script>
+    <!-- PUNTO DE ENTRADA MODULAR PARA LA ADMINISTRACIÓN -->
+    <script type="module" src="./admin-api.js"></script>
 </body>
 </html>
