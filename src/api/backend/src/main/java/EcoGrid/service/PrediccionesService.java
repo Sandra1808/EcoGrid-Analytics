@@ -109,7 +109,7 @@ public class PrediccionesService {
             prediccion.setIdtiempo(tiempo);
             prediccion.setDemandapredichamw(punto.demandaPredichaMw());
             prediccion.setDemandabaselinemw(punto.demandaBaselineMw());
-            prediccion.setFecha(LocalDateTime.now(ZoneOffset.UTC));
+            prediccion.setFecha(Instant.now());
 
             prediccionesRepository.save(prediccion);
         }

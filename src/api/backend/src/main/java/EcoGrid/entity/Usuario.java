@@ -9,7 +9,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.NumericBooleanConverter;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "USUARIOS")
@@ -53,7 +52,7 @@ public class Usuario {
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "FECCREACION")
-    private LocalDateTime feccreacion;
+    private Instant feccreacion;
 
     public Long getId() {
         return id;
@@ -111,10 +110,12 @@ public class Usuario {
         this.activo = activo;
     }
 
-    public LocalDateTime getFeccreacion() {
+    public Instant getFeccreacion() {
         return feccreacion;
     }
 
-    public void setFeccreacion(LocalDateTime feccreacion) {
+    public void setFeccreacion(Instant feccreacion) {
         this.feccreacion = feccreacion;
-    }}
+    }
+
+}
