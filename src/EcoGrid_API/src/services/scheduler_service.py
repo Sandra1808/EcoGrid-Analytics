@@ -4,7 +4,7 @@ Gestiona la ejecución periódica y autónoma de los conectores de EcoGrid segú
 """
 
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 import logging
@@ -17,11 +17,13 @@ from apscheduler.triggers.cron import CronTrigger
 
 from src.config.settings import BASE_DIR, DATA_RAW_DIR
 from src.services.ingestion_service import IngestionService
+from src.services.prediction_service import DailyPredictionService
 
 logger = logging.getLogger("EcoGrid.Scheduler")
 
 DEFAULT_CONFIG_PATH = BASE_DIR / "config" / "tasks.yaml"
 SCHEDULER_STATE_FILE = BASE_DIR / "data" / "scheduler_state.json"
+
 
 class SchedulerService:
     """Motor orquestador y planificador autónomo de ingestas periódicas."""
@@ -30,7 +32,8 @@ class SchedulerService:
         self.config_path = config_path
         self.raw_dir = raw_dir
         self.ingestion_service = IngestionService(raw_dir=self.raw_dir)
-        
+        self.prediction_service = DailyPredictionService()
+
         # Cargar configuración YAML
         self.config = self._load_config()
         tz_name = self.config.get("scheduler", {}).get("timezone", "Europe/Madrid")
@@ -126,16 +129,21 @@ class SchedulerService:
 
         trigger = IntervalTrigger(minutes=interval_minutes, timezone=self.timezone)
 
-        self.scheduler.add_job(
-            func=self._job_wrapper,
-            trigger=trigger,
-            args=[task_id],
-            id=task_id,
-            name=task_cfg.get("name", task_id),
-            replace_existing=True,
-            coalesce=True,
-            max_instances=1
-        )
+        job_options = {
+            "func": self._job_wrapper,
+            "trigger": trigger,
+            "args": [task_id],
+            "id": task_id,
+            "name": task_cfg.get("name", task_id),
+            "replace_existing": True,
+            "coalesce": True,
+            "max_instances": 1,
+        }
+
+        if task_cfg.get("connector") == "ree_esios":
+            job_options["next_run_time"] = datetime.now(self.timezone)
+
+        self.scheduler.add_job(**job_options)
         logger.info(f"Job programado: {task_id} cada {interval_minutes} minutos.")
 
     def _job_wrapper(self, task_id: str) -> None:
@@ -176,6 +184,9 @@ class SchedulerService:
             self.task_states[task_id] = status_info
             self._save_task_states()
 
+            if result.get("success") and connector_id == "ree_esios":
+                self._maybe_run_daily_prediction()
+
             return {
                 "success": result.get("success", False),
                 "task_id": task_id,
@@ -213,6 +224,57 @@ class SchedulerService:
                 "error": err_msg,
                 "timestamp": now_str
             }
+
+    def _maybe_run_daily_prediction(self) -> None:
+        """Ejecuta y guarda la predicción si no hubo una exitosa en las últimas 24 horas."""
+        state_key = "daily_model_prediction"
+        now = datetime.now(timezone.utc)
+        previous = self.task_states.get(state_key, {})
+        last_success = previous.get("last_success_timestamp_iso")
+
+        if last_success:
+            try:
+                last_run = datetime.fromisoformat(
+                    last_success.replace("Z", "+00:00")
+                )
+                if last_run.tzinfo is None:
+                    last_run = last_run.replace(tzinfo=timezone.utc)
+
+                if now - last_run < timedelta(hours=24):
+                    logger.info(
+                        "El modelo ya se ejecutó correctamente en las últimas 24 horas."
+                    )
+                    return
+            except ValueError:
+                logger.warning(
+                    "Fecha de última predicción inválida; se intentará ejecutar el modelo."
+                )
+
+        try:
+            result = self.prediction_service.predict_and_save()
+            finished = datetime.now(timezone.utc)
+            self.task_states[state_key] = {
+                "timestamp": finished.strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp_iso": finished.isoformat(),
+                "last_success_timestamp_iso": finished.isoformat(),
+                "status": "SUCCESS",
+                "summary": f"Lote guardado: {result['guardadas']} predicciones.",
+                "error": None,
+            }
+            logger.info("Predicción diaria guardada: %s", result)
+        except Exception as exc:
+            failed = datetime.now(timezone.utc)
+            self.task_states[state_key] = {
+                "timestamp": failed.strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp_iso": failed.isoformat(),
+                "last_success_timestamp_iso": last_success,
+                "status": "ERROR",
+                "summary": "No se pudo completar la predicción diaria.",
+                "error": str(exc),
+            }
+            logger.exception("Falló la predicción diaria.")
+        finally:
+            self._save_task_states()
 
     def get_tasks(self) -> List[Dict[str, Any]]:
         """Retorna la lista enriquecida de tareas con su estado, intervalos y tiempos."""
@@ -285,7 +347,11 @@ class SchedulerService:
             raise ValueError(f"Tarea no encontrada: {task_id}")
 
         tasks[task_id]["interval_minutes"] = int(interval_minutes)
-        tasks[task_id]["cron"] = f"*/{interval_minutes} * * * *" if interval_minutes < 60 else f"0 */{interval_minutes // 60} * * *"
+        tasks[task_id]["cron"] = (
+            f"*/{interval_minutes} * * * *"
+            if interval_minutes < 60
+            else f"0 */{interval_minutes // 60} * * *"
+        )
 
         # Si está habilitada, reprogramar en el scheduler
         if tasks[task_id].get("enabled", False):

@@ -8,7 +8,7 @@ import jakarta.persistence.Convert;
 import org.hibernate.type.NumericBooleanConverter;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "MODELOSML")
@@ -49,7 +49,7 @@ public class Modelosml {
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "FECENTRENAMIENTO")
-    private Instant fecentrenamiento;
+    private LocalDateTime fecentrenamiento;
 
     public Long getId() {
         return id;
@@ -115,11 +115,11 @@ public class Modelosml {
         this.indactivo = indactivo;
     }
 
-    public Instant getFecentrenamiento() {
+    public LocalDateTime getFecentrenamiento() {
         return fecentrenamiento;
     }
 
-    public void setFecentrenamiento(Instant fecentrenamiento) {
+    public void setFecentrenamiento(LocalDateTime fecentrenamiento) {
         this.fecentrenamiento = fecentrenamiento;
     }
 

@@ -3,7 +3,7 @@
 venv/
 ENV/
 env/
-
+venv312/
 # Caché de Python
 __pycache__/
 *.pyc
