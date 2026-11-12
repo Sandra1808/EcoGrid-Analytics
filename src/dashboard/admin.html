@@ -93,94 +93,6 @@
             gap: 0.5rem;
         }
 
-        /* Contenedor desplegable para el alta */
-        .collapsible-form {
-            display: none;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .collapsible-form.show {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-main);
-            box-sizing: border-box;
-            font-size: 0.95rem;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .role-description {
-            background-color: var(--info-bg);
-            border-left: 3px solid var(--accent);
-            padding: 0.75rem 1rem;
-            margin-top: 0.5rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            border-radius: 0 6px 6px 0;
-        }
-
-        .submit-btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.85rem 1.5rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .submit-btn:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .toggle-form-btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background-color 0.2s;
-            font-size: 0.9rem;
-        }
-
-        .toggle-form-btn:hover {
-            background-color: var(--accent-hover);
-        }
-
         .table-responsive {
             overflow-x: auto;
         }
@@ -214,27 +126,11 @@
             font-weight: 600;
             cursor: help;
         }
+
         .role-admin { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
         .role-analyst { background-color: rgba(59, 130, 246, 0.15); color: var(--info); }
         .role-operator { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); }
         .role-manager { background-color: rgba(16, 185, 129, 0.15); color: var(--accent); }
-
-        .btn-icon {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.3rem;
-            border-radius: 4px;
-            transition: background 0.2s;
-            color: var(--text-muted);
-        }
-        .btn-icon:hover {
-            background-color: var(--border-color);
-            color: var(--text-main);
-        }
-        .btn-delete:hover {
-            color: var(--danger);
-        }
 
         /* Contenedor de errores visible */
         #adminErrorContainer {
@@ -247,6 +143,12 @@
             margin-bottom: 1.5rem;
             font-weight: 600;
         }
+
+        .admin-note {
+            color: var(--text-muted);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+        }
     </style>
 </head>
 <body>
@@ -257,12 +159,12 @@
 
         <header>
             <h1>
-                <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i> 
+                <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
                 Gestión Corporativa - EcoGrid Power Trading S.L.
             </h1>
             <div class="nav-links">
                 <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Ir al Dashboard</a>
-                <a href="index.html"><i data-lucide="log-out" style="width: 16px; height: 16px;"></i> Cerrar Sesión</a>
+                <a href="index.html" id="logoutLink"><i data-lucide="log-out" style="width: 16px; height: 16px;"></i> Cerrar Sesión</a>
             </div>
         </header>
 
@@ -270,53 +172,9 @@
         <div class="card">
             <div class="card-header-flex">
                 <h2><i data-lucide="users" style="width: 20px; height: 20px;"></i> Directorio de Personal Registrado</h2>
-                <button class="toggle-form-btn" id="toggleBtn">
-                    <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i> Nuevo Trabajador
-                </button>
             </div>
 
-            <!-- FORMULARIO DESPLEGABLE DE ALTA -->
-            <div id="createFormContainer" class="collapsible-form">
-                <form id="createUserForm">
-                    <div class="form-group">
-                        <label for="workerName">Nombre Completo</label>
-                        <input type="text" id="workerName" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="workerEmail">Correo Electrónico Corporativo</label>
-                        <input type="email" id="workerEmail" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="workerCIF">CIF de la Empresa / Tenant</label>
-                        <input type="text" id="workerCIF" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="workerPassword">Contraseña Temporal</label>
-                        <input type="password" id="workerPassword" minlength="8" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="workerRole">Rol y Permisos del Sistema</label>
-                        <select id="workerRole" required>
-                            <option value="" selected>Selecciona un rol corporativo...</option>
-                            <option value="MANAGER">Gestor de Compra de Energía (Trader)</option>
-                            <option value="OPERATOR">Operador de Red y Monitorización</option>
-                            <option value="ANALYST">Analista / Responsable Financiero (Auditor)</option>
-                            <option value="ADMIN">Administrador General</option>
-                        </select>
-                        <div id="roleDescBox" class="role-description">
-                            Selecciona un rol para ver el detalle de los accesos asociados en la plataforma.
-                        </div>
-                    </div>
-
-                    <button type="submit" class="submit-btn">
-                        <i data-lucide="user-check" style="width: 18px; height: 18px;"></i> Registrar Usuario en la Empresa
-                    </button>
-                </form>
-            </div>
+            <p class="admin-note">Directorio de solo lectura. El administrador se crea directamente en la base de datos.</p>
 
             <!-- TABLA DE REGISTROS -->
             <div class="table-responsive" style="margin-top: 1rem;">
@@ -327,7 +185,6 @@
                             <th>CIF Vinculado</th>
                             <th>Rol Asignado</th>
                             <th>Fecha de Alta</th>
-                            <th style="text-align: center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">

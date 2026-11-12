@@ -1,57 +1,106 @@
 import { apiService } from './apiService.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const comunidadSelect = document.getElementById('comunidadSelect');
-    const fechaInput = document.getElementById('fechaInput');
-    const errorContainer = document.getElementById('errorContainer'); 
-    
-    const btnTogglePrediccion = document.getElementById('btnTogglePrediccion'); 
-    if (btnTogglePrediccion) {
-        btnTogglePrediccion.addEventListener('click', () => {
-            const datasetPredicha = demandChart.data.datasets[1]; // El índice 1 es la predicha
-            datasetPredicha.hidden = !datasetPredicha.hidden;
-            demandChart.update();
-            btnTogglePrediccion.textContent = datasetPredicha.hidden ? 'Mostrar Curva Predicha' : 'Ocultar Curva Predicha';
-        });
+    let usuario;
+
+    try {
+        usuario = await apiService.getCurrentUser();
+    } catch (error) {
+        window.location.replace('index.html');
+        return;
     }
 
-    const btnReejecutarIA = document.getElementById('btnReejecutarIA');
-    if (btnReejecutarIA) {
-        btnReejecutarIA.addEventListener('click', async () => {
+    const comunidadSelect = document.getElementById('comunidadSelect');
+    const fechaInput = document.getElementById('fechaInput');
+    const errorContainer = document.getElementById('errorContainer');
+
+    const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const arrowIcon = document.getElementById('arrowIcon');
+
+    const activeModelName = document.getElementById('activeModelName');
+    const activeModelVersion = document.getElementById('activeModelVersion');
+
+    toggleFiltersBtn?.addEventListener('click', () => {
+        if (!filterDropdown) return;
+
+        const abierto = filterDropdown.classList.toggle('show');
+
+        if (arrowIcon) {
+            arrowIcon.style.transform = abierto ? 'rotate(180deg)' : '';
+        }
+    });
+
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    if (userNameDisplay) {
+        userNameDisplay.textContent = usuario.nombre || usuario.email || '';
+    }
+
+    const adminLink = document.getElementById('adminLink');
+    const rol = (usuario.rol || '').toUpperCase();
+
+    if (adminLink) {
+        adminLink.style.display =
+            rol === 'ADMIN' || rol === 'ADMINISTRADOR' ? 'inline' : 'none';
+    }
+
+    const logoutLink = document.getElementById('logoutLink');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', async (event) => {
+            event.preventDefault();
+
             try {
-                clearError();
-                await apiService.triggerPrediction();
-                alert('Solicitud de re-ejecución de predicción enviada correctamente.');
-                loadDashboardData(); // Recarga los datos
+                await apiService.logout();
+                window.location.replace('index.html');
             } catch (error) {
-                showError(`Error al re-ejecutar la predicción: ${error.message}`);
+                showError(`No se pudo cerrar la sesión: ${error.message}`);
             }
         });
     }
 
-    // Declaramos la instancia del gráfico para que sea accesible al actualizar datos
-    const demandChart = new Chart(document.getElementById('demandChart'), {
+    const chartCanvas = document.getElementById('demandChart');
+    if (!chartCanvas) {
+        showError('No se encontró el elemento demandChart en el HTML.');
+        return;
+    }
+
+    const demandChart = new Chart(chartCanvas, {
         type: 'line',
         data: {
             labels: [],
             datasets: [
-                { label: 'Demanda Real (MW)', data: [], borderColor: '#3b82f6' },
-                { label: 'Demanda Predicha (MW)', data: [], borderColor: '#10b981' }
+                {
+                    label: 'Demanda Real (MW)',
+                    data: [],
+                    borderColor: '#3b82f6'
+                },
+                {
+                    label: 'Demanda Predicha (MW)',
+                    data: [],
+                    borderColor: '#10b981'
+                }
             ]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
     });
 
-    // ÚNICA función de renderizado asociada al gráfico 
     function renderDemandChart(seriesData) {
         if (!Array.isArray(seriesData)) {
             throw new Error('La API devolvió un formato de serie no válido');
         }
+
         const points = seriesData
             .map(point => ({
                 timestamp: Date.parse(point.fecHora),
-                real: point.demandaRealMWH == null ? null : Number(point.demandaRealMWH),
-                predicted: point.demandaPredichaMWH == null ? null : Number(point.demandaPredichaMWH)
+                real: point.demandaRealMWH == null
+                    ? null
+                    : Number(point.demandaRealMWH),
+                predicted: point.demandaPredichaMWH == null
+                    ? null
+                    : Number(point.demandaPredichaMWH)
             }))
             .filter(point => Number.isFinite(point.timestamp))
             .sort((a, b) => a.timestamp - b.timestamp);
@@ -63,23 +112,156 @@ document.addEventListener('DOMContentLoaded', async () => {
                 timeZone: 'Europe/Madrid'
             })
         );
+
         demandChart.data.datasets[0].data = points.map(point => point.real);
         demandChart.data.datasets[1].data = points.map(point => point.predicted);
         demandChart.update();
     }
 
-    // Cogemos la fecha actual para el input de la fecha, en formato YYYY-MM-DD
+    function renderErrorMetrics(seriesData) {
+        const maeEl = document.getElementById('valMAE');
+        const rmseEl = document.getElementById('valRMSE');
+        const mapeEl = document.getElementById('valMAPE');
+
+        if (!Array.isArray(seriesData)) {
+            if (maeEl) maeEl.textContent = '-- MW';
+            if (rmseEl) rmseEl.textContent = '-- MW';
+            if (mapeEl) mapeEl.textContent = '-- %';
+            return;
+        }
+
+        const pairs = [];
+
+        for (const point of seriesData) {
+            if (
+                point.demandaRealMWH == null ||
+                point.demandaPredichaMWH == null
+            ) {
+                continue;
+            }
+
+            const real = Number(point.demandaRealMWH);
+            const predicted = Number(point.demandaPredichaMWH);
+
+            if (Number.isFinite(real) && Number.isFinite(predicted)) {
+                pairs.push({ real, predicted });
+            }
+        }
+
+        if (pairs.length === 0) {
+            if (maeEl) maeEl.textContent = '-- MW';
+            if (rmseEl) rmseEl.textContent = '-- MW';
+            if (mapeEl) mapeEl.textContent = '-- %';
+            return;
+        }
+
+        const errors = pairs.map(point =>
+            Math.abs(point.real - point.predicted)
+        );
+
+        const mae = errors.reduce((sum, error) => sum + error, 0) / pairs.length;
+        const rmse = Math.sqrt(
+            errors.reduce((sum, error) => sum + error ** 2, 0) / pairs.length
+        );
+
+        const mapePairs = pairs.filter(point => point.real !== 0);
+        const mape = mapePairs.length > 0
+            ? mapePairs.reduce(
+                (sum, point) =>
+                    sum +
+                    Math.abs(point.real - point.predicted) /
+                        Math.abs(point.real),
+                0
+            ) / mapePairs.length * 100
+            : null;
+
+        const format = value => value.toLocaleString('es-ES', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        if (maeEl) {
+            maeEl.textContent = `${format(mae)} MW`;
+        }
+
+        if (rmseEl) {
+            rmseEl.textContent = `${format(rmse)} MW`;
+        }
+
+        if (mapeEl) {
+            mapeEl.textContent = mape === null
+                ? '-- %'
+                : `${format(mape)} %`;
+        }
+    }
+
+    function getAverageForecast(seriesData) {
+        if (!Array.isArray(seriesData)) {
+            return null;
+        }
+
+        const predictions = seriesData
+            .map(point => point.demandaPredichaMWH)
+            .filter(value => value != null)
+            .map(Number)
+            .filter(Number.isFinite);
+
+        if (predictions.length === 0) {
+            return null;
+        }
+
+        return predictions.reduce((sum, value) => sum + value, 0) /
+            predictions.length;
+    }
+
+    async function loadActiveModel() {
+        if (!activeModelName && !activeModelVersion) {
+            return;
+        }
+
+        try {
+            const model = await apiService.getActiveModel();
+
+            if (!model || typeof model !== 'object') {
+                throw new Error('La API devolvió un modelo activo no válido');
+            }
+
+            if (activeModelName) {
+                activeModelName.textContent =
+                    model.nombreAlgoritmo || 'Sin nombre';
+            }
+
+            if (activeModelVersion) {
+                activeModelVersion.textContent =
+                    model.version ? `Versión ${model.version}` : 'Versión —';
+            }
+        } catch (error) {
+            console.error('Error al cargar el modelo activo:', error);
+
+            if (activeModelName) {
+                activeModelName.textContent = 'No disponible';
+            }
+
+            if (activeModelVersion) {
+                activeModelVersion.textContent = 'Error al consultar la API';
+            }
+        }
+    }
+
     const now = new Date();
     const todayStr = [
         now.getFullYear(),
         String(now.getMonth() + 1).padStart(2, '0'),
         String(now.getDate()).padStart(2, '0')
     ].join('-');
-    if (fechaInput) fechaInput.value = todayStr;
 
-    // 1. Cargar el desplegable de Comunidades Autónomas (con parada si falla o está vacío)
+    if (fechaInput) {
+        fechaInput.value = todayStr;
+    }
+
     try {
         const comunidades = await apiService.getComunidades();
+
         if (!Array.isArray(comunidades) || comunidades.length === 0) {
             throw new Error('La lista de comunidades autónomas está vacía.');
         }
@@ -94,15 +276,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 comunidadSelect.appendChild(option);
             }
 
-            comunidadSelect.value = String(comunidades[0].id);
+            const nacional = comunidades.find(ccaa => Number(ccaa.id) === 1);
+
+            if (!nacional) {
+                throw new Error('No se encontró España nacional (IDCCAA=1)');
+            }
+
+            comunidadSelect.value = String(nacional.id);
         }
     } catch (error) {
         console.error('Error al cargar comunidades:', error);
-        showError('No se pudieron cargar las comunidades autónomas desde el servidor.');
-        return; // Detenemos la ejecución para evitar que el dashboard intente cargar sin CCAA válida
+        showError(`No se pudieron cargar las comunidades autónomas: ${error.message}`);
+        return;
     }
 
-    // 2. Función principal para cargar y refrescar los datos del Dashboard
     async function loadDashboardData() {
         const fechaSeleccionada = fechaInput ? fechaInput.value : todayStr;
         const ccaaSeleccionada = comunidadSelect ? comunidadSelect.value : '';
@@ -110,54 +297,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             clearError();
 
-            // Llamadas a la API en paralelo (incluyendo los endpoints auxiliares)
-            const [summary, demandSeries, alerts, sources, rawFiles, tasks] = await Promise.all([
-                apiService.getDashboardSummary(fechaSeleccionada, ccaaSeleccionada),
-                apiService.getDemandSeries(fechaSeleccionada, ccaaSeleccionada),
-                apiService.getAlerts(),
-                apiService.getSources().catch(() => []),
-                apiService.getRawFiles().catch(() => []),
-                apiService.getSchedulerTasks().catch(() => [])
-            ]);
+            const [summary, demandSeries, alerts, sources, rawFiles, tasks] =
+                await Promise.all([
+                    apiService.getDashboardSummary(
+                        fechaSeleccionada,
+                        ccaaSeleccionada
+                    ),
+                    apiService.getDemandSeries(
+                        fechaSeleccionada,
+                        ccaaSeleccionada
+                    ),
+                    apiService.getAlerts(),
+                    apiService.getSources(),
+                    apiService.getRawFiles(),
+                    apiService.getSchedulerTasks()
+                ]);
 
-            // Renderizar componentes principales
-            renderSummaryKPIs(summary);
+            renderSummaryKPIs(summary, demandSeries);
             renderDemandChart(demandSeries);
+            renderErrorMetrics(demandSeries);
             renderAlerts(alerts);
-            
-            // Renderizar auxiliares si tienes contenedores habilitados en el HTML
             renderSources(sources);
             renderRawFiles(rawFiles);
             renderTasks(tasks);
-
         } catch (error) {
             console.error('Error al sincronizar con la API:', error);
             showError(`Error de conexión o de la API: ${error.message}`);
         }
     }
 
-    // 3. Funciones de renderizado en el DOM
-    function renderSummaryKPIs(summary) {
+    function renderSummaryKPIs(summary, demandSeries) {
         const kpis = summary?.kpis ?? {};
+
         const format = (value, suffix) => {
             const number = value == null ? NaN : Number(value);
+
             return Number.isFinite(number)
                 ? `${number.toLocaleString('es-ES')} ${suffix}`
                 : 'Sin datos disponibles';
         };
 
         const demActualEl = document.getElementById('kpiDemandaActual');
-        if (demActualEl) demActualEl.textContent = format(kpis.demanda_media_mw, 'MW');
-        
+        if (demActualEl) {
+            demActualEl.textContent = format(kpis.demanda_media_mw, 'MW');
+        }
+
         const demPrevEl = document.getElementById('kpiDemandaPrevista');
-        if (demPrevEl) demPrevEl.textContent = 'Sin datos disponibles';
-        
+        if (demPrevEl) {
+            demPrevEl.textContent =
+                format(getAverageForecast(demandSeries), 'MW');
+        }
+
         const costeDesvioEl = document.getElementById('kpiCosteDesvio');
-        if (costeDesvioEl) costeDesvioEl.textContent = format(kpis.coste_desvio_estimado_eur, '€');
-        
-        const costeFinancieroEl = document.getElementById('kpiCosteDesvioFinanciero');
+        if (costeDesvioEl) {
+            costeDesvioEl.textContent =
+                format(kpis.coste_desvio_estimado_eur, '€');
+        }
+
+        const costeFinancieroEl =
+            document.getElementById('kpiCosteDesvioFinanciero');
+
         if (costeFinancieroEl) {
-            costeFinancieroEl.textContent = format(kpis.coste_desvio_estimado_eur, '€');
+            costeFinancieroEl.textContent =
+                format(kpis.coste_desvio_estimado_eur, '€');
         }
     }
 
@@ -174,54 +376,67 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         for (const alert of alerts) {
             const item = document.createElement('p');
-            item.textContent = `[${alert.nivelAlerta ?? '—'}] ${alert.tipo ?? ''} ${alert.mensaje ?? ''} ${alert.fecHora ?? ''}`;
+            item.textContent =
+                `[${alert.nivelAlerta ?? '—'}] ${alert.tipo ?? ''} ` +
+                `${alert.mensaje ?? ''} ${alert.fecHora ?? ''}`;
             container.appendChild(item);
         }
     }
 
-    // Renderizadores opcionales para los endpoints auxiliares (si existen en tu HTML)
     function renderSources(sources) {
         const container = document.getElementById('sourcesContainer');
         if (!container) return;
+
         container.replaceChildren();
+
         if (!Array.isArray(sources) || sources.length === 0) {
             container.textContent = 'Sin fuentes registradas.';
             return;
         }
+
         for (const src of sources) {
-            const p = document.createElement('p');
-            p.textContent = `Fuente: ${src.nombre ?? src.id ?? '—'}`;
-            container.appendChild(p);
+            const paragraph = document.createElement('p');
+            paragraph.textContent = `Fuente: ${src.nombre ?? src.id ?? '—'}`;
+            container.appendChild(paragraph);
         }
     }
 
     function renderRawFiles(files) {
         const container = document.getElementById('rawFilesContainer');
         if (!container) return;
+
         container.replaceChildren();
+
         if (!Array.isArray(files) || files.length === 0) {
             container.textContent = 'Sin ficheros raw.';
             return;
         }
+
         for (const file of files) {
-            const p = document.createElement('p');
-            p.textContent = `Fichero: ${file.nombre ?? file.id ?? '—'}`;
-            container.appendChild(p);
+            const paragraph = document.createElement('p');
+            paragraph.textContent =
+                `Fichero: ${file.nombre ?? file.id ?? '—'}`;
+            container.appendChild(paragraph);
         }
     }
 
     function renderTasks(tasks) {
         const container = document.getElementById('tasksContainer');
         if (!container) return;
+
         container.replaceChildren();
+
         if (!Array.isArray(tasks) || tasks.length === 0) {
             container.textContent = 'Sin tareas programadas.';
             return;
         }
+
         for (const task of tasks) {
-            const p = document.createElement('p');
-            p.textContent = `Tarea: ${task.nombre ?? task.id ?? '—'} (${task.estado ?? 'Activa'})`;
-            container.appendChild(p);
+            const paragraph = document.createElement('p');
+            paragraph.textContent =
+                `Tarea: ${task.nombre ?? task.id ?? '—'} ` +
+                `(${task.estado ?? 'Activa'})`;
+            container.appendChild(paragraph);
         }
     }
 
@@ -239,10 +454,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Eventos de cambio en los filtros
-    if (comunidadSelect) comunidadSelect.addEventListener('change', loadDashboardData);
-    if (fechaInput) fechaInput.addEventListener('change', loadDashboardData);
+    if (comunidadSelect) {
+        comunidadSelect.addEventListener('change', loadDashboardData);
+    }
 
-    // Carga inicial al abrir la página
+    if (fechaInput) {
+        fechaInput.addEventListener('change', loadDashboardData);
+    }
+
+    loadActiveModel();
     loadDashboardData();
 });
