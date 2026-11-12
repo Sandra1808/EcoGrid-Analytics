@@ -15,5 +15,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @EntityGraph(attributePaths = "idrol")
     Optional<Usuario> findByIdAndCif(Long id, String cif);
 
+    @EntityGraph(attributePaths = "idrol")
+    Optional<Usuario> findByCifAndEmailIgnoreCase(String cif, String email);
+
+
+
     boolean existsByCifAndEmailIgnoreCase(String cif, String email);
 }
