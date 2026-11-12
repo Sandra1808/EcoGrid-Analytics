@@ -8,6 +8,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PREDICCIONESDEMANDA")
@@ -43,7 +44,7 @@ public class Prediccionesdemanda {
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "FECHA")
-    private Instant fecha;
+    private LocalDateTime fecha;
 
     public Long getId() {
         return id;
@@ -93,11 +94,11 @@ public class Prediccionesdemanda {
         this.demandabaselinemw = demandabaselinemw;
     }
 
-    public Instant getFecha() {
+    public LocalDateTime getFecha() {
         return fecha;
     }
 
-    public void setFecha(Instant fecha) {
+    public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
     }
 

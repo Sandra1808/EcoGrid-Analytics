@@ -1,28 +1,36 @@
 package EcoGrid.rest;
 
 import EcoGrid.dao.ComunidadautonomaRepository;
-import EcoGrid.dto.AlertasOperativaDto;
-import EcoGrid.dto.CcaaDto;
-import EcoGrid.dto.DashboardSummaryDto;
-import EcoGrid.dto.DemandaHistoricaDto;
-import EcoGrid.dto.DemandaSerieDto;
-import EcoGrid.dto.FuenteDto;
-import EcoGrid.dto.PrediccionDto;
-import EcoGrid.dto.PrediccionLoteDto;
-import EcoGrid.dto.RawFileDto;
-import EcoGrid.dto.SchedulerTaskDto;
-import EcoGrid.dto.UsuarioResponse;
+import EcoGrid.dao.ModelosmlRepository;
+import EcoGrid.dao.UsuarioRepository;
+import EcoGrid.dto.*;
+import EcoGrid.entity.Usuario;
 import EcoGrid.service.AlertasOperativaService;
 import EcoGrid.service.DashboardService;
 import EcoGrid.service.DemandaHistoricaService;
 import EcoGrid.service.FuentesService;
 import EcoGrid.service.PrediccionesService;
 import EcoGrid.service.UsuariosService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,44 +43,130 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-import java.time.ZoneId;
 
 @RestController
 public class EcoGridController {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(EcoGridController.class);
+
     private final ComunidadautonomaRepository comunidadRepository;
+    private final ModelosmlRepository modelosmlRepository;
     private final DemandaHistoricaService demandaHistoricaService;
     private final PrediccionesService prediccionesService;
     private final AlertasOperativaService alertasOperativaService;
     private final DashboardService dashboardService;
     private final FuentesService fuentesService;
     private final UsuariosService usuariosService;
+    private final UsuarioRepository usuarioRepository;
+    private final AuthenticationManager authenticationManager;
+    private final SecurityContextRepository securityContextRepository;
+    private final String tenantCif;
 
     @Value("${app.predictions.api-key:}")
     private String predictionApiKey;
 
     public EcoGridController(
             ComunidadautonomaRepository comunidadRepository,
+            ModelosmlRepository modelosmlRepository,
             DemandaHistoricaService demandaHistoricaService,
             PrediccionesService prediccionesService,
             AlertasOperativaService alertasOperativaService,
             DashboardService dashboardService,
             FuentesService fuentesService,
-            UsuariosService usuariosService) {
+            UsuariosService usuariosService,
+            UsuarioRepository usuarioRepository,
+            AuthenticationManager authenticationManager,
+            SecurityContextRepository securityContextRepository,
+            @Value("${app.tenant.cif:}") String tenantCif) {
         this.comunidadRepository = comunidadRepository;
+        this.modelosmlRepository = modelosmlRepository;
         this.demandaHistoricaService = demandaHistoricaService;
         this.prediccionesService = prediccionesService;
         this.alertasOperativaService = alertasOperativaService;
         this.dashboardService = dashboardService;
         this.fuentesService = fuentesService;
         this.usuariosService = usuariosService;
+        this.usuarioRepository = usuarioRepository;
+        this.authenticationManager = authenticationManager;
+        this.securityContextRepository = securityContextRepository;
+        this.tenantCif = tenantCif;
+    }
+
+    @GetMapping("/api/models/active")
+    public ModeloActivoDto modeloActivo() {
+        var modelo = modelosmlRepository
+                .findByIndactivoTrueOrderByFecentrenamientoDesc()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "No hay un modelo activo"));
+
+        return new ModeloActivoDto(
+                modelo.getId(),
+                modelo.getNombrealgoritmo(),
+                modelo.getVersion());
     }
 
     @GetMapping("/api/health")
     public HealthResponse health() {
         return new HealthResponse("UP", "EcoGrid API funcionando");
+    }
+
+    @PostMapping("/api/auth/login")
+    public AuthResponse login(
+            @Valid @RequestBody LoginRequest login,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        Authentication authentication;
+
+        try {
+            authentication = authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(
+                            login.email().trim(),
+                            login.password()));
+        } catch (AuthenticationException exception) {
+            log.warn(
+                    "Fallo al autenticar en /api/auth/login ({})",
+                    exception.getClass().getSimpleName(),
+                    exception);
+            SecurityContextHolder.clearContext();
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Email o contraseña incorrectos");
+        }
+
+        HttpSession existingSession = request.getSession(false);
+        if (existingSession != null) {
+            request.changeSessionId();
+        }
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, request, response);
+
+        return getAuthResponse(authentication.getName());
+    }
+
+    @GetMapping("/api/auth/me")
+    public AuthResponse currentUser(Authentication authentication) {
+        return getAuthResponse(authentication.getName());
+    }
+
+    @PostMapping("/api/auth/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        SecurityContextHolder.clearContext();
+
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/api/comunidades")
@@ -109,7 +203,6 @@ public class EcoGridController {
             @RequestParam(name = "fecha")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
             @RequestParam(name = "ccaaId", defaultValue = "10") Long ccaaId) {
-
         Instant desde = fecha.atStartOfDay(ZoneId.of("Europe/Madrid"))
                 .toInstant();
         Instant hasta = fecha.plusDays(1)
@@ -162,6 +255,35 @@ public class EcoGridController {
         return prediccionesService.listarNacional(desde, hasta);
     }
 
+    private AuthResponse getAuthResponse(String email) {
+        if (tenantCif.isBlank()) {
+            log.warn("La propiedad app.tenant.cif está vacía");
+        }
+
+        Usuario usuario = usuarioRepository
+                .findByCifAndEmailIgnoreCase(tenantCif, email)
+                .orElseThrow(() -> {
+                    log.warn(
+                            "Usuario autenticado no encontrado para el CIF configurado");
+                    return new ResponseStatusException(
+                            HttpStatus.UNAUTHORIZED,
+                            "Sesión no válida");
+                });
+
+        if (!Boolean.TRUE.equals(usuario.getActivo())) {
+            log.warn("Login rechazado después de autenticar: usuario inactivo");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Sesión no válida");
+        }
+
+        return new AuthResponse(
+                usuario.getEmail(),
+                usuario.getNombre(),
+                usuario.getCif(),
+                usuario.getIdrol().getRol());
+    }
+
     private void validarApiKey(String recibida) {
         if (predictionApiKey.isBlank()) {
             throw new ResponseStatusException(
@@ -176,6 +298,18 @@ public class EcoGridController {
                     HttpStatus.UNAUTHORIZED,
                     "API key no válida");
         }
+    }
+
+    public record LoginRequest(
+            @NotBlank @Email String email,
+            @NotBlank String password) {
+    }
+
+    public record AuthResponse(
+            String email,
+            String nombre,
+            String cif,
+            String rol) {
     }
 
     public record HealthResponse(String status, String message) {
