@@ -1,0 +1,41 @@
+{
+  "open_meteo": {
+    "active": true,
+    "last_run": {
+      "status": "SUCCESS",
+      "http_code": 200,
+      "timestamp": "2026-11-12T01:12:10.218183",
+      "timestamp_formatted": "2026-11-12 01:12:10",
+      "saved_file": "open_meteo_20261112_011210.json",
+      "file_size": 34836,
+      "summary": "Descarga exitosa de 168 registros horarios para Madrid (40.41, -3.73)",
+      "error": null
+    }
+  },
+  "omie": {
+    "active": true,
+    "last_run": {
+      "status": "SUCCESS",
+      "http_code": 200,
+      "timestamp": "2026-11-12T01:12:11.239751",
+      "timestamp_formatted": "2026-11-12 01:12:11",
+      "saved_file": "omie_20261112_011211.json",
+      "file_size": 18239,
+      "summary": "Descarga exitosa de OMIE marginal para la fecha 20261112 (96 horas)",
+      "error": null
+    }
+  },
+  "ree_esios": {
+    "active": true,
+    "last_run": {
+      "status": "SUCCESS",
+      "http_code": 200,
+      "timestamp": "2026-11-12T14:12:07.959148",
+      "timestamp_formatted": "2026-11-12 14:12:07",
+      "saved_file": "ree_esios_20261112_141207.json",
+      "file_size": 375191,
+      "summary": "Descarga exitosa desde REE Apidatos (Prevista, Programada, Real, Programada total)",
+      "error": null
+    }
+  }
+}

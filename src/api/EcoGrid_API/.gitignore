@@ -1,0 +1,28 @@
+# Entornos virtuales
+.venv/
+venv/
+ENV/
+env/
+venv312/
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Configuración local y secretos
+.env
+wallet/
+*wallet*/
+*.sso
+ewallet.p12
+ewallet.pem
+tnsnames.ora
+sqlnet.ora
+ojdbc.properties
+.vscode/
+.idea/
+
+# Datos crudos masivos
+data/raw/*.json
+!data/raw/.gitkeep

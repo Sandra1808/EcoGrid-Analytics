@@ -11,20 +11,20 @@ Optimización de Costes Energéticos Mediante Predicción de Consumo.
 Desarrollar una aplicación web de analítica predictiva (SmartGrid-Predictor) basada en Machine Learning para series temporales que permita predecir el consumo eléctrico a 24 horas y traducirlo en un indicador de impacto económico, facilitando la toma de decisiones en comercializadoras energéticas y gestores de red.
 
 ## Tecnologías Previstas
-* **Lenguajes:** Python 3.10+, Java, HTML5, CSS3, JavaScript, PHP
-* **Procesamiento de Datos & ML:** Pandas, NumPy, Scikit-Learn, XGBoost, Prophet, Joblib
+* **Lenguajes:** Python 3.10+, HTML5, CSS3, JavaScript
+* **Procesamiento de Datos & ML:** Pandas, NumPy, Scikit-Learn, XGBoost, Joblib
 * **Entorno de Desarrollo y Cómputo:** Visual Studio Code & Google Colab
-* **Backend & API:** Java con Spring Boot
-* **Base de Datos & ORM:** Oracle Database
-* **Visualización & Dashboard:** HTML5, CSS3, JavaScript (Chart.js), PHP
-* **Control de Versiones & MLOps:** Git, GitHub, Git LFS, Google Colab
+* **Backend & API:** Python (FastAPI / Uvicorn)
+* **Base de Datos & ORM:** Oracle Database / Estructuras locales procesadas (`.csv`)
+* **Visualización & Dashboard:** HTML5, CSS3, JavaScript (Chart.js)
+* **Control de Versiones & MLOps:** Git, GitHub, Google Colab
 
 ## Arquitectura Resumida
-El sistema sigue una arquitectura modular en capas (N-Tiers):
+El sistema sigue una arquitectura modular en capas:
 1. **Capa de Ingesta y ETL (Python):** Captura y normaliza series temporales de REE, ESIOS y OMIE.
 2. **Capa de Machine Learning (Python/Joblib):** Genera la predicción de demanda a 24 horas y evalúa métricas frente a un modelo baseline.
-3. **Capa de Servicio Backend (Spring Boot 3 / Java 17):** Expone endpoints RESTful, gestiona la seguridad, lógica de negocio e indicadores de impacto económico (€) y la multitenancy basada en organización por CIF.
-4. **Capa de Persistencia (Oracle Database):** Almacena el modelo relacional corporativo (con tablas para gestión de usuarios/roles por CIF, dimensiones temporales, histórico de consumo, predicciones, meteorología y alertas).
+3. **Capa de Servicio Backend & API (Python / FastAPI):** Expone endpoints RESTful, gestiona la lógica de negocio e indicadores de impacto económico (€).
+4. **Capa de Persistencia:** Almacenamiento estructurado de datasets maestros y modelos entrenados.
 5. **Capa de Presentación (Frontend Web):** Interfaz responsive construida con HTML5, CSS3 y JavaScript (Chart.js) para la supervisión de curvas y alertas operativas.
 
 ## Cómo Ejecutar el Proyecto
@@ -32,44 +32,59 @@ El sistema sigue una arquitectura modular en capas (N-Tiers):
 Dado que el sistema se compone de un pipeline analítico en Python, un backend en Spring Boot y una interfaz web, la ejecución preliminar se divide en las siguientes fases:
 
 1. **Clonar el repositorio:**
-   git clone [https://github.com/Sandra1808/EcoGrid-Analytics.git](https://github.com/Sandra1808/EcoGrid-Analytics.git)
+   ```bash
+   git clone https://github.com/Sandra1808/EcoGrid-Analytics.git
    cd EcoGrid-Analytics
+   ```
 
 2. **Configuración del entorno de datos y Machine Learning (Python):**
-   Se recomienda utilizar un entorno virtual para la ejecución de los scripts de ingesta y modelado:
+   * Se recomienda utilizar un entorno virtual para la ejecución de los scripts y dependencias:
+   ```bash
    python -m venv venv
-   source venv/bin/activate  # En Windows: venv\Scripts\activate
-   pip install -r environment/requirements.txt
+   ```
 
-3. **Configuración y ejecución del Backend (Spring Boot):**
-   * Abre la carpeta contenedora del backend (`src/backend/`) en tu IDE.
-   * Configura los parámetros de conexión a tu base de datos Oracle en el fichero de propiedades (`src/main/resources/application.properties`):
-     spring.datasource.url=jdbc:oracle:thin:@//localhost:1521/ORCL
-     spring.datasource.username=tu_usuario
-     spring.datasource.password=tu_contraseña
-   * Ejecuta la aplicación mediante Maven:
-     mvn spring-boot:run
+   En Windows PowerShell:
+
+   ```powershell
+   .\venv\Scripts\Activate.ps1
+   pip install -r environment/requirements.txt
+   ```
+
+   En macOS o Linux:
+
+   ```bash
+   source venv/bin/activate
+   pip install -r environment/requirements.txt
+   ```
+
+3. **Ejecución de la API / Predicciones:**
+   * Desde la raíz del proyecto, inicia FastAPI con Uvicorn. Ajusta la ruta del módulo si el archivo que declara `app` tiene otro nombre:
+
+   ```bash
+   uvicorn src.api.main:app --reload
+   ```
 
 4. **Visualización y Acceso al Frontend:**
-   * Abre los componentes estáticos o la interfaz web desde la ruta `src/frontend/` en tu navegador web o despliégala en un servidor local para verificar la integración con los endpoints RESTful.
+   * Abre los componentes estáticos o la interfaz web desde la ruta `src/dashboard/` en tu navegador web o despliégala en un servidor local. El módulo `src/services/api.js` se comunica con la API en `http://localhost:8000/api`.
 
 ## Estructura del Repositorio
 ```text
 EcoGrid-Analytics/
-├── docs/                      # Documentación general y entregables del curso (PDFs, NF1...)
+├── docs/                      # Documentación general y entregables 
 │   └── NF0_Presentacion_alineacion_viabilidad.pdf
 │   └── NF1_Documentación_Grupo4.pdf
 │   └──arquitectura.png
 │   └──modelo_relacional.png
+├── data/                      # Datasets exportados y procesados
+├── environment/               # Archivos de configuración de entorno (requirements.txt, etc.)
 ├── src/                       # Código fuente de la aplicación
-│   ├── data/                  # Notebooks de Google Colab para ingesta y limpieza de datos
-│   ├── models/                # Notebooks de Google Colab para entrenamiento y evaluación
-│   ├── api/                   # Servidor backend y endpoints en Spring Boot
-│   └── dashboard/             # Interfaz de usuario en HTML, CSS y JavaScript
-├── data/                      # Datasets (archivos .csv / .parquet localmente)
-├── environment/               # Archivos de configuración de entorno (requirements.txt / environment.yml)
-├── .gitignore                 # Archivos ignorados por Git
-└── README.md                  # Descripción general del proyecto
+│   ├── data/                    # Notebooks de Google Colab para ingesta y limpieza de datos
+│   ├── models/                  # Modelos entrenados y artefactos (.joblib)
+│   ├── api/                     # Backend y servicios API
+│   ├──dashboard/                # Interfaz de usuario en HTML, CSS y JavaScript
+    └──services/                 # Lógica de servicios y scripts auxiliares
+├── .gitignore                   # Archivos ignorados por Git
+└── README.md                    # Descripción general del proyecto
 
 
 

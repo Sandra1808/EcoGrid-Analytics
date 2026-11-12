@@ -1,0 +1,877 @@
+{
+  "market": "OMIE",
+  "concept": "Precios Marginales del Mercado Diario",
+  "reference_date": "20261028",
+  "filename_original": "marginalpdbc_20261028.1",
+  "total_hours": 96,
+  "records": [
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 1,
+      "price_spain": 229.25,
+      "price_portugal": 229.25
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 2,
+      "price_spain": 225.01,
+      "price_portugal": 225.01
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 3,
+      "price_spain": 216.0,
+      "price_portugal": 216.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 4,
+      "price_spain": 220.0,
+      "price_portugal": 220.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 5,
+      "price_spain": 220.78,
+      "price_portugal": 220.78
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 6,
+      "price_spain": 212.0,
+      "price_portugal": 212.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 7,
+      "price_spain": 215.46,
+      "price_portugal": 215.46
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 8,
+      "price_spain": 215.64,
+      "price_portugal": 215.64
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 9,
+      "price_spain": 220.22,
+      "price_portugal": 220.22
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 10,
+      "price_spain": 214.97,
+      "price_portugal": 214.97
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 11,
+      "price_spain": 218.69,
+      "price_portugal": 218.69
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 12,
+      "price_spain": 218.66,
+      "price_portugal": 218.66
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 13,
+      "price_spain": 215.21,
+      "price_portugal": 215.21
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 14,
+      "price_spain": 212.0,
+      "price_portugal": 212.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 15,
+      "price_spain": 213.0,
+      "price_portugal": 213.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 16,
+      "price_spain": 212.63,
+      "price_portugal": 212.63
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 17,
+      "price_spain": 212.0,
+      "price_portugal": 212.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 18,
+      "price_spain": 213.0,
+      "price_portugal": 213.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 19,
+      "price_spain": 202.83,
+      "price_portugal": 202.83
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 20,
+      "price_spain": 204.25,
+      "price_portugal": 204.25
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 21,
+      "price_spain": 207.21,
+      "price_portugal": 207.21
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 22,
+      "price_spain": 206.17,
+      "price_portugal": 206.17
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 23,
+      "price_spain": 219.53,
+      "price_portugal": 219.53
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 24,
+      "price_spain": 226.0,
+      "price_portugal": 226.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 25,
+      "price_spain": 233.8,
+      "price_portugal": 233.8
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 26,
+      "price_spain": 237.92,
+      "price_portugal": 237.92
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 27,
+      "price_spain": 242.82,
+      "price_portugal": 242.82
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 28,
+      "price_spain": 246.0,
+      "price_portugal": 246.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 29,
+      "price_spain": 251.0,
+      "price_portugal": 251.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 30,
+      "price_spain": 280.23,
+      "price_portugal": 280.23
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 31,
+      "price_spain": 297.48,
+      "price_portugal": 297.48
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 32,
+      "price_spain": 298.39,
+      "price_portugal": 298.39
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 33,
+      "price_spain": 279.81,
+      "price_portugal": 279.81
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 34,
+      "price_spain": 245.0,
+      "price_portugal": 245.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 35,
+      "price_spain": 236.96,
+      "price_portugal": 236.96
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 36,
+      "price_spain": 220.0,
+      "price_portugal": 220.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 37,
+      "price_spain": 164.5,
+      "price_portugal": 164.5
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 38,
+      "price_spain": 149.0,
+      "price_portugal": 149.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 39,
+      "price_spain": 140.2,
+      "price_portugal": 140.2
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 40,
+      "price_spain": 127.4,
+      "price_portugal": 127.4
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 41,
+      "price_spain": 109.0,
+      "price_portugal": 109.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 42,
+      "price_spain": 68.49,
+      "price_portugal": 68.49
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 43,
+      "price_spain": 58.1,
+      "price_portugal": 58.1
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 44,
+      "price_spain": 57.66,
+      "price_portugal": 57.66
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 45,
+      "price_spain": 57.88,
+      "price_portugal": 57.88
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 46,
+      "price_spain": 57.08,
+      "price_portugal": 57.08
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 47,
+      "price_spain": 57.55,
+      "price_portugal": 57.55
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 48,
+      "price_spain": 57.55,
+      "price_portugal": 57.55
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 49,
+      "price_spain": 57.55,
+      "price_portugal": 57.55
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 50,
+      "price_spain": 57.66,
+      "price_portugal": 57.66
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 51,
+      "price_spain": 57.99,
+      "price_portugal": 57.99
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 52,
+      "price_spain": 61.68,
+      "price_portugal": 61.68
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 53,
+      "price_spain": 65.0,
+      "price_portugal": 65.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 54,
+      "price_spain": 68.49,
+      "price_portugal": 68.49
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 55,
+      "price_spain": 68.49,
+      "price_portugal": 68.49
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 56,
+      "price_spain": 68.49,
+      "price_portugal": 68.49
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 57,
+      "price_spain": 68.49,
+      "price_portugal": 68.49
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 58,
+      "price_spain": 68.49,
+      "price_portugal": 68.49
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 59,
+      "price_spain": 68.49,
+      "price_portugal": 68.49
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 60,
+      "price_spain": 76.75,
+      "price_portugal": 76.75
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 61,
+      "price_spain": 71.93,
+      "price_portugal": 71.93
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 62,
+      "price_spain": 75.0,
+      "price_portugal": 75.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 63,
+      "price_spain": 100.0,
+      "price_portugal": 100.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 64,
+      "price_spain": 128.0,
+      "price_portugal": 128.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 65,
+      "price_spain": 134.2,
+      "price_portugal": 134.2
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 66,
+      "price_spain": 144.4,
+      "price_portugal": 144.4
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 67,
+      "price_spain": 164.0,
+      "price_portugal": 164.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 68,
+      "price_spain": 199.99,
+      "price_portugal": 199.99
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 69,
+      "price_spain": 225.08,
+      "price_portugal": 200.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 70,
+      "price_spain": 235.1,
+      "price_portugal": 235.1
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 71,
+      "price_spain": 244.55,
+      "price_portugal": 244.55
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 72,
+      "price_spain": 300.0,
+      "price_portugal": 300.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 73,
+      "price_spain": 271.08,
+      "price_portugal": 271.08
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 74,
+      "price_spain": 300.0,
+      "price_portugal": 300.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 75,
+      "price_spain": 300.0,
+      "price_portugal": 300.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 76,
+      "price_spain": 309.74,
+      "price_portugal": 309.74
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 77,
+      "price_spain": 304.18,
+      "price_portugal": 304.18
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 78,
+      "price_spain": 314.73,
+      "price_portugal": 314.73
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 79,
+      "price_spain": 319.0,
+      "price_portugal": 319.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 80,
+      "price_spain": 319.0,
+      "price_portugal": 319.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 81,
+      "price_spain": 319.0,
+      "price_portugal": 319.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 82,
+      "price_spain": 315.02,
+      "price_portugal": 315.02
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 83,
+      "price_spain": 308.52,
+      "price_portugal": 308.52
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 84,
+      "price_spain": 300.0,
+      "price_portugal": 300.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 85,
+      "price_spain": 304.18,
+      "price_portugal": 304.18
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 86,
+      "price_spain": 297.78,
+      "price_portugal": 297.78
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 87,
+      "price_spain": 284.1,
+      "price_portugal": 284.1
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 88,
+      "price_spain": 279.82,
+      "price_portugal": 256.98
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 89,
+      "price_spain": 296.08,
+      "price_portugal": 284.75
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 90,
+      "price_spain": 291.33,
+      "price_portugal": 270.53
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 91,
+      "price_spain": 284.91,
+      "price_portugal": 255.81
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 92,
+      "price_spain": 280.23,
+      "price_portugal": 245.0
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 93,
+      "price_spain": 282.22,
+      "price_portugal": 249.59
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 94,
+      "price_spain": 274.95,
+      "price_portugal": 238.86
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 95,
+      "price_spain": 271.08,
+      "price_portugal": 234.3
+    },
+    {
+      "year": 2026,
+      "month": 10,
+      "day": 28,
+      "hour": 96,
+      "price_spain": 261.78,
+      "price_portugal": 224.88
+    }
+  ],
+  "raw_lines": [
+    "MARGINALPDBC;",
+    "2026;10;28;1;229.25;229.25;",
+    "2026;10;28;2;225.01;225.01;",
+    "2026;10;28;3;216;216;",
+    "2026;10;28;4;220;220;",
+    "2026;10;28;5;220.78;220.78;",
+    "2026;10;28;6;212;212;",
+    "2026;10;28;7;215.46;215.46;",
+    "2026;10;28;8;215.64;215.64;",
+    "2026;10;28;9;220.22;220.22;",
+    "2026;10;28;10;214.97;214.97;",
+    "2026;10;28;11;218.69;218.69;",
+    "2026;10;28;12;218.66;218.66;",
+    "2026;10;28;13;215.21;215.21;",
+    "2026;10;28;14;212;212;",
+    "2026;10;28;15;213;213;",
+    "2026;10;28;16;212.63;212.63;",
+    "2026;10;28;17;212;212;",
+    "2026;10;28;18;213;213;",
+    "2026;10;28;19;202.83;202.83;",
+    "2026;10;28;20;204.25;204.25;",
+    "2026;10;28;21;207.21;207.21;",
+    "2026;10;28;22;206.17;206.17;",
+    "2026;10;28;23;219.53;219.53;",
+    "2026;10;28;24;226;226;",
+    "2026;10;28;25;233.8;233.8;",
+    "2026;10;28;26;237.92;237.92;",
+    "2026;10;28;27;242.82;242.82;",
+    "2026;10;28;28;246;246;",
+    "2026;10;28;29;251;251;",
+    "2026;10;28;30;280.23;280.23;",
+    "2026;10;28;31;297.48;297.48;",
+    "2026;10;28;32;298.39;298.39;",
+    "2026;10;28;33;279.81;279.81;",
+    "2026;10;28;34;245;245;",
+    "2026;10;28;35;236.96;236.96;",
+    "2026;10;28;36;220;220;",
+    "2026;10;28;37;164.5;164.5;",
+    "2026;10;28;38;149;149;",
+    "2026;10;28;39;140.2;140.2;",
+    "2026;10;28;40;127.4;127.4;",
+    "2026;10;28;41;109;109;",
+    "2026;10;28;42;68.49;68.49;",
+    "2026;10;28;43;58.1;58.1;",
+    "2026;10;28;44;57.66;57.66;",
+    "2026;10;28;45;57.88;57.88;",
+    "2026;10;28;46;57.08;57.08;",
+    "2026;10;28;47;57.55;57.55;",
+    "2026;10;28;48;57.55;57.55;",
+    "2026;10;28;49;57.55;57.55;",
+    "2026;10;28;50;57.66;57.66;",
+    "2026;10;28;51;57.99;57.99;",
+    "2026;10;28;52;61.68;61.68;",
+    "2026;10;28;53;65;65;",
+    "2026;10;28;54;68.49;68.49;",
+    "2026;10;28;55;68.49;68.49;",
+    "2026;10;28;56;68.49;68.49;",
+    "2026;10;28;57;68.49;68.49;",
+    "2026;10;28;58;68.49;68.49;",
+    "2026;10;28;59;68.49;68.49;",
+    "2026;10;28;60;76.75;76.75;",
+    "2026;10;28;61;71.93;71.93;",
+    "2026;10;28;62;75;75;",
+    "2026;10;28;63;100;100;",
+    "2026;10;28;64;128;128;",
+    "2026;10;28;65;134.2;134.2;",
+    "2026;10;28;66;144.4;144.4;",
+    "2026;10;28;67;164;164;",
+    "2026;10;28;68;199.99;199.99;",
+    "2026;10;28;69;225.08;200;",
+    "2026;10;28;70;235.1;235.1;",
+    "2026;10;28;71;244.55;244.55;",
+    "2026;10;28;72;300;300;",
+    "2026;10;28;73;271.08;271.08;",
+    "2026;10;28;74;300;300;",
+    "2026;10;28;75;300;300;",
+    "2026;10;28;76;309.74;309.74;",
+    "2026;10;28;77;304.18;304.18;",
+    "2026;10;28;78;314.73;314.73;",
+    "2026;10;28;79;319;319;",
+    "2026;10;28;80;319;319;",
+    "2026;10;28;81;319;319;",
+    "2026;10;28;82;315.02;315.02;",
+    "2026;10;28;83;308.52;308.52;",
+    "2026;10;28;84;300;300;",
+    "2026;10;28;85;304.18;304.18;",
+    "2026;10;28;86;297.78;297.78;",
+    "2026;10;28;87;284.1;284.1;",
+    "2026;10;28;88;279.82;256.98;",
+    "2026;10;28;89;296.08;284.75;",
+    "2026;10;28;90;291.33;270.53;",
+    "2026;10;28;91;284.91;255.81;",
+    "2026;10;28;92;280.23;245;",
+    "2026;10;28;93;282.22;249.59;",
+    "2026;10;28;94;274.95;238.86;",
+    "2026;10;28;95;271.08;234.3;",
+    "2026;10;28;96;261.78;224.88;",
+    "*"
+  ]
+}
