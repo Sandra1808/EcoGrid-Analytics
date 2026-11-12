@@ -57,14 +57,17 @@ Dado que el sistema se compone de un pipeline analítico en Python, un backend e
    pip install -r environment/requirements.txt
    ```
 
-3. **Ejecución de la API / Predicciones:**
+3.**Ejecución de la API /  Backend**
+   *Acceder al documento guia_backend_local de la raíz del repositorio y seguir las instrucciones proporcionadas para ejecutar la api en local*
+4. **Ejecución de la API / Predicciones:**
    * Desde la raíz del proyecto, inicia FastAPI con Uvicorn. Ajusta la ruta del módulo si el archivo que declara `app` tiene otro nombre:
 
    ```bash
    uvicorn src.api.main:app --reload
    ```
 
-4. **Visualización y Acceso al Frontend:**
+
+5. **Visualización y Acceso al Frontend:**
    * Abre los componentes estáticos o la interfaz web desde la ruta `src/dashboard/` en tu navegador web o despliégala en un servidor local. El módulo `src/services/api.js` se comunica con la API en `http://localhost:8000/api`.
 
 ## Estructura del Repositorio
