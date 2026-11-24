@@ -20,60 +20,33 @@ python-dotenv>=1.0.0
 pydantic>=2.0.0
 jinja2>=3.1.2
 """,
-    ".env": """# Archivo de variables de entorno locales
+    ".env.example": """HOST=127.0.0.1
 PORT=8000
-HOST=127.0.0.1
 DATA_DIR=data/raw
+LOG_LEVEL=INFO
 
-# Claves de APIs Externas (Completar según acciones.md)
+ORACLE_ENABLED=false
+ORACLE_USER=
+ORACLE_PASSWORD=
+ORACLE_DSN=
+ORACLE_WALLET_DIR=
+ORACLE_WALLET_PASSWORD=
+ORACLE_CONNECT_TIMEOUT=20
+
+CALENDAR_TZ=Europe/Madrid
+NACIONAL_CCAA_CODINE=00
+METEO_CCAA_CODINE=13
+
 ESIOS_API_TOKEN=
+SPRING_API_BASE_URL=http://127.0.0.1:8080
+SPRING_PREDICTIONS_API_KEY=
+PREDICTION_MODEL_ID=1
+PREDICTION_MODEL_PATH=models/modelo_xgboost_demanda.json
 """,
-    ".env.example": """# Plantilla de variables de entorno
-PORT=8000
-HOST=127.0.0.1
-DATA_DIR=data/raw
+    "README.md": """# EcoGrid API
 
-# Claves de APIs Externas
-ESIOS_API_TOKEN=tu_token_aqui
+Ejecuta `uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload` desde esta carpeta después de copiar `.env.example` a `.env`. Nunca introduzcas credenciales reales en `.env.example`.
 """,
-    "acciones.md": """# ACCIONES EXTERNAS E INTERNAS REQUERIDAS
-
-## 🚨 ACCIONES EXTERNAS (CLAVES Y REGISTROS)
-1. **ESIOS / REE (Red Eléctrica de España)**:
-   - Es necesario solicitar un API Token enviando un correo a `consultasios@ree.es` indicando el uso para investigación/proyecto.
-   - Una vez recibido, añadir el token en el archivo `.env` en la variable `ESIOS_API_TOKEN`.
-
-2. **Open-Meteo**:
-   - No requiere API Key para uso estándar no comercial.
-
-3. **OMIE**:
-   - Se utiliza la descarga pública o peticiones directas. Si en el futuro se requiere autenticación, documentar aquí.
-
----
-
-## 🛠️ ACCIONES INTERNAS (CONFIGURACIÓN DE ENTORNO)
-1. Ejecutar el entorno virtual (`venv`).
-2. Instalar dependencias: `pip install -r requirements.txt`.
-3. Iniciar el servidor local: `uvicorn src.main:app --reload`.
-""",
-    "README.md": "# EcoGrid API - Gestor de Ingesta y Conexiones API\n\nAplicación local para la gestión, llamada y recepción de datos desde orígenes heterogéneos (Open-Meteo, OMIE, REE/ESIOS).",
-    
-    # Archivos de código python iniciales
-    "src/__init__.py": "",
-    "src/config/__init__.py": "",
-    "src/config/settings.py": "# Configuración global de la aplicación\n",
-    "src/connectors/__init__.py": "",
-    "src/connectors/meteo_client.py": "# Conector Open-Meteo\n",
-    "src/connectors/omie_client.py": "# Conector OMIE\n",
-    "src/connectors/ree_client.py": "# Conector REE / ESIOS\n",
-    "src/services/__init__.py": "",
-    "src/services/ingestion_service.py": "# Servicio de orquestación de ingesta\n",
-    "src/main.py": "# Punto de entrada principal FastAPI\n",
-
-    # Archivos HTML/JS básicos para la interfaz de administración
-    "src/templates/index.html": "<!-- Panel de administración web de EcoGrid API -->\n",
-    "src/static/app.js": "// Lógica de interacción web para activar/desactivar orígenes y disparar llamadas\n",
-    "src/static/style.css": "/* Estilos del panel de administración */\n"
 }
 
 def create_project_structure():

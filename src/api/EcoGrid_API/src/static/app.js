@@ -4,8 +4,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Inicialización del estado de autenticación corporativa
-  checkAuthSession();
+  // El panel es local y no implementa autenticación; Spring Boot gestiona el acceso al dashboard de producción.
+  const loginScreen = document.getElementById('login-screen');
+  const dashboardApp = document.getElementById('dashboard-app');
+  if (loginScreen) loginScreen.remove();
+  if (dashboardApp) dashboardApp.style.display = 'block';
 
   // Atajos de teclado y accesibilidad
   document.addEventListener('keydown', (e) => {
@@ -24,73 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Si ya está autenticado, cargar las tareas programadas periódicamente en segundo plano
-  if (sessionStorage.getItem('ecogrid_authenticated') === 'true') {
-    loadScheduledTasks();
-  }
+  loadScheduledTasks();
 });
 
 /* ==========================================================================
-   1. CONTROL DE AUTENTICACIÓN (LOGIN OPERADOR)
+   1. ACCESO OPERATIVO
    ========================================================================== */
 
 /**
- * Comprueba si el operador tiene una sesión activa en sessionStorage.
+ * El acceso histórico admin/admin se elimina: no aporta autenticación y no protege endpoints.
+ * Este panel está pensado para uso local; los controles reales deben protegerse en despliegue.
  */
-function checkAuthSession() {
-  const isAuthenticated = sessionStorage.getItem('ecogrid_authenticated') === 'true';
-  const loginScreen = document.getElementById('login-screen');
-  const dashboardApp = document.getElementById('dashboard-app');
-
-  if (isAuthenticated) {
-    if (loginScreen) loginScreen.style.display = 'none';
-    if (dashboardApp) dashboardApp.style.display = 'block';
-  } else {
-    if (loginScreen) loginScreen.style.display = 'flex';
-    if (dashboardApp) dashboardApp.style.display = 'none';
-  }
-}
-
-/**
- * Procesa el formulario de autenticación estricta (admin / admin).
- */
-function handleLoginSubmit(event) {
-  event.preventDefault();
-  const usernameInput = document.getElementById('login-username');
-  const passwordInput = document.getElementById('login-password');
-  const errorAlert = document.getElementById('login-error-alert');
-  const errorText = document.getElementById('login-error-text');
-
-  const username = usernameInput ? usernameInput.value.trim() : '';
-  const password = passwordInput ? passwordInput.value : '';
-
-  // Validación estricta hardcodeada
-  if (username === 'admin' && password === 'admin') {
-    if (errorAlert) errorAlert.style.display = 'none';
-    sessionStorage.setItem('ecogrid_authenticated', 'true');
-    checkAuthSession();
-    loadScheduledTasks();
-    showToast('Sesión de operador iniciada correctamente (admin)', 'success');
-  } else {
-    if (errorAlert) {
-      errorAlert.style.display = 'flex';
-      errorText.textContent = 'Credenciales no autorizadas. Usuario o clave incorrectos.';
-    }
-    if (passwordInput) {
-      passwordInput.value = '';
-      passwordInput.focus();
-    }
-  }
-}
-
-/**
- * Cierra la sesión activa del operador.
- */
-function handleLogout() {
-  sessionStorage.removeItem('ecogrid_authenticated');
-  checkAuthSession();
-  showToast('Sesión de operador finalizada', 'info');
-}
 
 /* ==========================================================================
    2. NAVEGACIÓN POR PESTAÑAS (TABS)

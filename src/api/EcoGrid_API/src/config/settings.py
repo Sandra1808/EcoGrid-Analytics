@@ -38,3 +38,8 @@ OMIE_BASE_URL = "https://www.omie.es/es/file-download"
 # Parámetros por defecto para REE / ESIOS
 ESIOS_BASE_URL = "https://api.esios.ree.es"
 REE_APIDATOS_BASE_URL = "https://apidatos.ree.es/es/datos/demanda/demanda-tiempo-real"
+
+# Nivel de logging y timeouts externos configurables
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").strip().upper()
+HTTP_TIMEOUT_SECONDS = int(os.getenv("HTTP_TIMEOUT_SECONDS", "15"))
+PREDICTION_TIMEOUT_SECONDS = int(os.getenv("PREDICTION_TIMEOUT_SECONDS", "30"))

@@ -26,3 +26,12 @@ ojdbc.properties
 # Datos crudos masivos
 data/raw/*.json
 !data/raw/.gitkeep
+
+# Archivos temporales de auditoría
+*_old.py
+*_old.md
+*_old.html
+*_old.js
+*_old.example
+.gitignore_old
+.env_old.example

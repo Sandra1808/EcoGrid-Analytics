@@ -18,20 +18,20 @@
     "error": null
   },
   "ree_demanda_tiempo_real": {
-    "timestamp": "2026-11-12 14:12:07",
-    "timestamp_iso": "2026-11-12T14:12:07.953135+01:00",
+    "timestamp": "2026-11-24 19:29:14",
+    "timestamp_iso": "2026-11-24T19:29:14.783632+01:00",
     "status": "SUCCESS",
     "http_code": 200,
-    "saved_file": "ree_esios_20261112_141207.json",
+    "saved_file": "ree_esios_20261124_192914.json",
     "summary": "Descarga exitosa desde REE Apidatos (Prevista, Programada, Real, Programada total)",
     "error": null
   },
   "daily_model_prediction": {
-    "timestamp": "2026-11-12 12:18:56",
-    "timestamp_iso": "2026-11-12T12:18:56.040794+00:00",
+    "timestamp": "2026-11-24 18:29:16",
+    "timestamp_iso": "2026-11-24T18:29:16.286505+00:00",
     "last_success_timestamp_iso": "2026-11-12T12:18:56.040794+00:00",
-    "status": "SUCCESS",
-    "summary": "Lote guardado: 24 predicciones.",
-    "error": null
+    "status": "ERROR",
+    "summary": "No se pudo completar la predicción diaria.",
+    "error": "Falta SPRING_PREDICTIONS_API_KEY en el .env de EcoGrid_API."
   }
 }

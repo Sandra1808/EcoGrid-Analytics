@@ -10,10 +10,27 @@ from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+import logging
+import os
+import time
+from datetime import datetime, timezone
 
 from src.config.settings import BASE_DIR, DATA_RAW_DIR, HOST, PORT, ESIOS_API_TOKEN
 from src.services.ingestion_service import IngestionService
 from src.services.scheduler_service import SchedulerService
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("EcoGrid.API")
+
+EXECUTION_METRICS: Dict[str, Any] = {
+    "started_at": datetime.now(timezone.utc).isoformat(),
+    "requests": 0,
+    "executions": 0,
+    "execution_failures": 0,
+}
 
 app = FastAPI(
     title="EcoGrid Analytics API",
@@ -102,37 +119,39 @@ async def toggle_source(source_id: str, payload: Optional[ToggleSourceRequest] =
             "message": f"Fuente '{source_id}' {'activada' if updated['active'] else 'desactivada'}",
             "source": updated
         }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Origen de datos no encontrado")
 
 @app.post("/api/sources/{source_id}/execute")
 async def execute_source(source_id: str):
     """Ejecuta la ingesta manual de una fuente específica y guarda el archivo bruto."""
+    EXECUTION_METRICS["executions"] += 1
     try:
         result = ingestion_service.execute_source(source_id)
-        return {
-            "success": result["success"],
-            "result": result
-        }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error durante la ejecución: {str(e)}")
+        if not result.get("success"):
+            EXECUTION_METRICS["execution_failures"] += 1
+            logger.warning("Ingesta fallida para %s: %s", source_id, result.get("error", "sin detalle")[:300])
+        return {"success": result["success"], "result": result}
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Origen de datos no encontrado")
+    except Exception:
+        EXECUTION_METRICS["execution_failures"] += 1
+        logger.exception("Error interno ejecutando la fuente %s", source_id)
+        raise HTTPException(status_code=500, detail="No se pudo completar la ingesta")
 
 @app.post("/api/ingestion/execute-active")
 async def execute_active_sources():
-    """Ejecuta la ingesta simultánea de todos los orígenes marcados como activos."""
+    """Ejecuta simultáneamente los orígenes marcados como activos."""
+    EXECUTION_METRICS["executions"] += 1
     try:
         results = ingestion_service.execute_active_sources()
         success_count = sum(1 for r in results if r.get("success"))
-        return {
-            "success": True,
-            "total_executed": len(results),
-            "total_success": success_count,
-            "results": results
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en ingesta activa: {str(e)}")
+        EXECUTION_METRICS["execution_failures"] += len(results) - success_count
+        return {"success": True, "total_executed": len(results), "total_success": success_count, "results": results}
+    except Exception:
+        EXECUTION_METRICS["execution_failures"] += 1
+        logger.exception("Error interno ejecutando las fuentes activas")
+        raise HTTPException(status_code=500, detail="No se pudo completar la ingesta activa")
 
 @app.get("/api/raw-files")
 async def list_raw_files():
@@ -152,10 +171,11 @@ async def get_raw_file(filename: str):
     try:
         data = ingestion_service.get_raw_file_content(filename)
         return data
-    except FileNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al leer archivo: {str(e)}")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    except Exception:
+        logger.exception("Error interno leyendo un archivo bruto")
+        raise HTTPException(status_code=500, detail="No se pudo leer el archivo")
 
 @app.get("/api/raw-files/{filename}/download")
 async def download_raw_file(filename: str):
@@ -176,8 +196,11 @@ async def delete_raw_file(filename: str):
         if not deleted:
             raise HTTPException(status_code=404, detail="Archivo no encontrado")
         return {"success": True, "message": f"Archivo '{filename}' eliminado"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Error interno eliminando un archivo bruto")
+        raise HTTPException(status_code=500, detail="No se pudo eliminar el archivo")
 
 @app.get("/api/stats")
 async def get_stats():
@@ -213,44 +236,42 @@ async def toggle_scheduled_task(task_id: str, payload: Optional[ToggleTaskReques
     try:
         enabled_val = payload.enabled if payload else None
         updated = scheduler_service.toggle_task(task_id, enabled_val)
-        return {
-            "success": True,
-            "message": f"Tarea '{task_id}' {'activada' if updated['enabled'] else 'desactivada'}",
-            "task": updated
-        }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al cambiar estado de tarea: {str(e)}")
+        return {"success": True, "message": f"Tarea '{task_id}' {'activada' if updated['enabled'] else 'desactivada'}", "task": updated}
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Tarea programada no encontrada")
+    except Exception:
+        logger.exception("Error interno cambiando una tarea programada")
+        raise HTTPException(status_code=500, detail="No se pudo cambiar el estado de la tarea")
 
 @app.post("/api/scheduler/tasks/{task_id}/update")
 async def update_scheduled_task(task_id: str, payload: UpdateTaskRequest):
-    """Modifica la frecuencia en minutos de una tarea programada y actualiza tasks.yaml."""
+    """Modifica la frecuencia en minutos de una tarea programada."""
+    if payload.interval_minutes < 1:
+        raise HTTPException(status_code=400, detail="El intervalo debe ser mayor que cero")
     try:
         updated = scheduler_service.update_task_interval(task_id, payload.interval_minutes)
-        return {
-            "success": True,
-            "message": f"Frecuencia de '{task_id}' actualizada a {payload.interval_minutes} minutos",
-            "task": updated
-        }
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al actualizar intervalo: {str(e)}")
+        return {"success": True, "message": f"Frecuencia de '{task_id}' actualizada", "task": updated}
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Tarea programada no encontrada")
+    except Exception:
+        logger.exception("Error interno actualizando una tarea programada")
+        raise HTTPException(status_code=500, detail="No se pudo actualizar la tarea")
 
 @app.post("/api/scheduler/tasks/{task_id}/execute")
 async def execute_scheduled_task_now(task_id: str):
-    """Dispara inmediatamente la ejecución manual de una tarea programada sin esperar al temporizador."""
+    """Dispara inmediatamente la ejecución manual de una tarea programada."""
+    EXECUTION_METRICS["executions"] += 1
     try:
         result = scheduler_service.execute_task_now(task_id)
-        return {
-            "success": result["success"],
-            "result": result
-        }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error durante la ejecución de la tarea: {str(e)}")
+        if not result.get("success"):
+            EXECUTION_METRICS["execution_failures"] += 1
+        return {"success": result["success"], "result": result}
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Tarea programada no encontrada")
+    except Exception:
+        EXECUTION_METRICS["execution_failures"] += 1
+        logger.exception("Error interno ejecutando una tarea programada")
+        raise HTTPException(status_code=500, detail="No se pudo ejecutar la tarea")
 
 @app.get("/api/scheduler/config-yaml")
 async def get_scheduler_config_yaml():
@@ -259,6 +280,41 @@ async def get_scheduler_config_yaml():
     if yaml_path.exists():
         return {"content": yaml_path.read_text(encoding="utf-8")}
     return {"content": ""}
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    EXECUTION_METRICS["requests"] += 1
+    started = time.perf_counter()
+    try:
+        response = await call_next(request)
+        elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+        logger.info("%s %s -> %s (%.2f ms)", request.method, request.url.path, response.status_code, elapsed_ms)
+        return response
+    except Exception:
+        logger.exception("Excepción no controlada en %s %s", request.method, request.url.path)
+        raise
+
+@app.get("/health")
+async def health():
+    """Estado básico operativo de FastAPI y del scheduler."""
+    return {
+        "status": "ok",
+        "service": "EcoGrid-Analytics-FastAPI",
+        "version": app.version,
+        "utc": datetime.now(timezone.utc).isoformat(),
+        "scheduler": scheduler_service.get_scheduler_status(),
+        "oracle_enabled": os.getenv("ORACLE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "si", "on"},
+    }
+
+@app.get("/api/health")
+async def api_health():
+    """Alias explícito para comprobaciones automáticas y documentación."""
+    return await health()
+
+@app.get("/api/metrics")
+async def metrics():
+    """Métricas básicas en memoria; se reinician al reiniciar el proceso."""
+    return {**EXECUTION_METRICS, "utc": datetime.now(timezone.utc).isoformat()}
 
 if __name__ == "__main__":
     import uvicorn
