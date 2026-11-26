@@ -90,6 +90,7 @@ class DailyPredictionService:
         history_response = requests.get(
             f"{self.api_base_url}/api/demanda/historica",
             params=params,
+            headers={"X-API-Key": self.api_key},
             timeout=30,
         )
         history_response.raise_for_status()
